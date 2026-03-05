@@ -1,10 +1,14 @@
 import { useSimulation } from '../store/simulation.js'
 
 const PRESETS = [
-  { name: 'Binary Star',  icon: '⭐' },
-  { name: 'Solar System', icon: '🪐' },
-  { name: 'Figure-8',     icon: '♾️'  },
-  { name: 'Chaos',        icon: '💥' },
+  { name: 'Binary Star',      icon: '⭐' },
+  { name: 'Solar System',     icon: '🪐' },
+  { name: 'Figure-8',         icon: '♾️'  },
+  { name: 'Chaos',            icon: '💥' },
+  { name: 'Trojan Asteroids', icon: '🪨' },
+  { name: 'Galaxy Collision', icon: '🌌' },
+  { name: 'Pulsar System',    icon: '💫' },
+  { name: 'Rogue Planet',     icon: '🌠' },
 ]
 
 const TIME_PRESETS = [0.1, 0.5, 1, 5, 20]
