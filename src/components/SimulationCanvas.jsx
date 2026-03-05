@@ -6,6 +6,7 @@ import * as THREE from 'three'
 import { useSimulation } from '../store/simulation.js'
 import { stepSimulation, bodyRadius, bodyColor } from '../physics/engine.js'
 import CollisionFlashes from './CollisionFlash.jsx'
+import { bodyRadius, bodyColor } from '../physics/engine.js'
 
 // ─── Starfield ────────────────────────────────────────────────────────────────
 function Starfield() {
@@ -135,91 +136,89 @@ function PhysicsLoop() {
 
 // ─── Placement Ghost ──────────────────────────────────────────────────────────
 function PlacementGhost({ pendingMass }) {
-  const { camera, raycaster } = useThree()
-  const meshRef = useRef()
+  const { camera } = useThree()
   const [ghostPos, setGhostPos] = useState(new THREE.Vector3(0, 0, 0))
-  const [phase, setPhase] = useState('positioning') // 'positioning' | 'velocity'
+  const [phase, setPhase] = useState('positioning')
   const [startPos, setStartPos] = useState(null)
   const [dragEnd, setDragEnd] = useState(null)
-  const planeRef = useRef(new THREE.Plane(new THREE.Vector3(0, 0, 1), 0))
+  const plane = useRef(new THREE.Plane(new THREE.Vector3(0, 0, 1), 0))
+  const raycaster = useRef(new THREE.Raycaster())
   const addBody = useSimulation(s => s.addBody)
   const setMode = useSimulation(s => s.setPlacementMode)
-  const { generateId, bodyColor: getColor } = require('../physics/engine.js')
 
-  const handleMove = useCallback((e) => {
-    const target = new THREE.Vector3()
-    raycaster.setFromCamera(
-      { x: (e.clientX / window.innerWidth) * 2 - 1, y: -(e.clientY / window.innerHeight) * 2 + 1 },
-      camera
+  function getWorldPos(e) {
+    const ndc = new THREE.Vector2(
+      (e.clientX / window.innerWidth) * 2 - 1,
+      -(e.clientY / window.innerHeight) * 2 + 1
     )
-    raycaster.ray.intersectPlane(planeRef.current, target)
-    if (phase === 'positioning') setGhostPos(target)
-    else setDragEnd(target.clone())
-  }, [camera, raycaster, phase])
-
-  const handleClick = useCallback((e) => {
-    if (phase === 'positioning') {
-      const target = new THREE.Vector3()
-      raycaster.setFromCamera(
-        { x: (e.clientX / window.innerWidth) * 2 - 1, y: -(e.clientY / window.innerHeight) * 2 + 1 },
-        camera
-      )
-      raycaster.ray.intersectPlane(planeRef.current, target)
-      setStartPos(target.clone())
-      setPhase('velocity')
-    }
-  }, [phase, camera, raycaster])
-
-  const handleRelease = useCallback(() => {
-    if (phase === 'velocity' && startPos) {
-      const vel = dragEnd
-        ? new THREE.Vector3(
-            (dragEnd.x - startPos.x) * 0.05,
-            (dragEnd.y - startPos.y) * 0.05,
-            (dragEnd.z - startPos.z) * 0.05
-          )
-        : new THREE.Vector3(0, 0, 0)
-
-      const { generateId } = require('../physics/engine.js')
-      addBody({
-        id: generateId(),
-        name: `Body`,
-        mass: pendingMass,
-        position: startPos.clone(),
-        velocity: vel,
-        acceleration: new THREE.Vector3(0, 0, 0),
-        trail: [],
-        color: bodyColor(pendingMass)
-      })
-      setMode('idle')
-    }
-  }, [phase, startPos, dragEnd, pendingMass, addBody, setMode])
+    raycaster.current.setFromCamera(ndc, camera)
+    const target = new THREE.Vector3()
+    raycaster.current.ray.intersectPlane(plane.current, target)
+    return target
+  }
 
   useEffect(() => {
-    window.addEventListener('mousemove', handleMove)
-    window.addEventListener('click', handleClick)
-    window.addEventListener('mouseup', handleRelease)
-    return () => {
-      window.removeEventListener('mousemove', handleMove)
-      window.removeEventListener('click', handleClick)
-      window.removeEventListener('mouseup', handleRelease)
+    const onMove = (e) => {
+      const p = getWorldPos(e)
+      if (phase === 'positioning') setGhostPos(p)
+      else if (phase === 'velocity') setDragEnd(p.clone())
     }
-  }, [handleMove, handleClick, handleRelease])
+
+    const onClick = (e) => {
+      if (phase === 'positioning') {
+        const p = getWorldPos(e)
+        setStartPos(p.clone())
+        setGhostPos(p.clone())
+        setPhase('velocity')
+      }
+    }
+
+    const onUp = (e) => {
+      if (phase === 'velocity' && startPos) {
+        const end = getWorldPos(e)
+        const vel = new THREE.Vector3(
+          (end.x - startPos.x) * 0.05,
+          (end.y - startPos.y) * 0.05,
+          0
+        )
+        addBody({
+          id: `body-${Date.now()}`,
+          name: 'Body',
+          mass: pendingMass,
+          position: startPos.clone(),
+          velocity: vel,
+          acceleration: new THREE.Vector3(0, 0, 0),
+          trail: [],
+          color: bodyColor(pendingMass)
+        })
+        setMode('idle')
+      }
+    }
+
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('click', onClick)
+    window.addEventListener('mouseup', onUp)
+    return () => {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('click', onClick)
+      window.removeEventListener('mouseup', onUp)
+    }
+  }, [phase, startPos, pendingMass, addBody, setMode, camera])
 
   const radius = bodyRadius(pendingMass)
   const color = bodyColor(pendingMass)
-  const pos = phase === 'positioning' ? ghostPos : startPos || ghostPos
+  const pos = phase === 'velocity' && startPos ? startPos : ghostPos
 
   return (
     <group position={[pos.x, pos.y, pos.z]}>
-      <mesh ref={meshRef}>
+      <mesh>
         <sphereGeometry args={[radius, 24, 24]} />
         <meshStandardMaterial
           color={color}
           emissive={color}
-          emissiveIntensity={1}
+          emissiveIntensity={0.8}
           transparent
-          opacity={0.6}
+          opacity={phase === 'positioning' ? 0.5 : 0.9}
           wireframe={phase === 'positioning'}
         />
       </mesh>
@@ -227,7 +226,7 @@ function PlacementGhost({ pendingMass }) {
         <Line
           points={[[0,0,0], [dragEnd.x - pos.x, dragEnd.y - pos.y, 0]]}
           color="#00e5ff"
-          lineWidth={2}
+          lineWidth={2.5}
         />
       )}
     </group>
