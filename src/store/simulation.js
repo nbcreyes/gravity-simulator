@@ -11,6 +11,8 @@ export const useSimulation = create((set) => ({
   selectedBodyId: null,
   placementMode: 'idle',
   collisionFlashes: [],
+  lockedBodyId: null,
+  cameraMode: 'free', // 'free' | 'locked' | 'topdown' | 'side'
 
   addBody: (body) => set(state => ({
     bodies: [...state.bodies, body]
@@ -18,7 +20,8 @@ export const useSimulation = create((set) => ({
 
   removeBody: (id) => set(state => ({
     bodies: state.bodies.filter(b => b.id !== id),
-    selectedBodyId: state.selectedBodyId === id ? null : state.selectedBodyId
+    selectedBodyId: state.selectedBodyId === id ? null : state.selectedBodyId,
+    lockedBodyId: state.lockedBodyId === id ? null : state.lockedBodyId
   })),
 
   updateBodies: (newBodies) => set({ bodies: newBodies }),
@@ -33,20 +36,26 @@ export const useSimulation = create((set) => ({
     bodies: [],
     selectedBodyId: null,
     placementMode: 'idle',
-    collisionFlashes: []
+    collisionFlashes: [],
+    lockedBodyId: null,
+    cameraMode: 'free'
   }),
 
   loadPreset: (name) => set({
     bodies: loadPreset(name),
     selectedBodyId: null,
     placementMode: 'idle',
-    collisionFlashes: []
+    collisionFlashes: [],
+    lockedBodyId: null,
+    cameraMode: 'free'
   }),
 
   selectBody: (id) => set({ selectedBodyId: id }),
   setPlacementMode: (mode) => set({ placementMode: mode }),
   setG: (G) => set({ G }),
   setTimeScale: (ts) => set({ timeScale: ts }),
+  setLockedBodyId: (id) => set({ lockedBodyId: id, cameraMode: id ? 'locked' : 'free' }),
+  setCameraMode: (mode) => set({ cameraMode: mode, lockedBodyId: null }),
 
   addCollisionFlash: (flash) => set(state => ({
     collisionFlashes: [...state.collisionFlashes, flash]

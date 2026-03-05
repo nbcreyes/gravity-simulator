@@ -21,13 +21,7 @@ function Starfield() {
 
   return (
     <Points positions={positions} frustumCulled={false}>
-      <PointMaterial
-        size={0.9}
-        color="#ffffff"
-        transparent
-        opacity={0.55}
-        sizeAttenuation
-      />
+      <PointMaterial size={0.9} color="#ffffff" transparent opacity={0.55} sizeAttenuation />
     </Points>
   )
 }
@@ -36,8 +30,7 @@ function Starfield() {
 function SaturnRings({ radius }) {
   const texture = useMemo(() => {
     const canvas = document.createElement('canvas')
-    canvas.width  = 256
-    canvas.height = 1
+    canvas.width = 256; canvas.height = 1
     const ctx  = canvas.getContext('2d')
     const grad = ctx.createLinearGradient(0, 0, 256, 0)
     grad.addColorStop(0,    'rgba(0,0,0,0)')
@@ -55,13 +48,7 @@ function SaturnRings({ radius }) {
   return (
     <mesh rotation={[Math.PI / 2.2, 0, 0.3]}>
       <ringGeometry args={[radius * 1.4, radius * 2.6, 128]} />
-      <meshBasicMaterial
-        map={texture}
-        transparent
-        opacity={0.75}
-        side={THREE.DoubleSide}
-        depthWrite={false}
-      />
+      <meshBasicMaterial map={texture} transparent opacity={0.75} side={THREE.DoubleSide} depthWrite={false} />
     </mesh>
   )
 }
@@ -69,20 +56,16 @@ function SaturnRings({ radius }) {
 // ── Planet Texture ────────────────────────────────────────────────────────────
 function usePlanetTexture(name, color) {
   return useMemo(() => {
-    const size   = 256
+    const size = 256
     const canvas = document.createElement('canvas')
-    canvas.width  = size
-    canvas.height = size
+    canvas.width = canvas.height = size
     const ctx = canvas.getContext('2d')
-
     ctx.fillStyle = color
     ctx.fillRect(0, 0, size, size)
 
     if (name === 'Jupiter' || name === 'Saturn') {
       for (let i = 0; i < 12; i++) {
-        ctx.fillStyle = i % 2 === 0
-          ? 'rgba(255,255,255,0.07)'
-          : 'rgba(0,0,0,0.1)'
+        ctx.fillStyle = i % 2 === 0 ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.1)'
         ctx.fillRect(0, (i / 12) * size, size, size / 12)
       }
     } else if (name === 'Earth') {
@@ -96,26 +79,19 @@ function usePlanetTexture(name, color) {
     } else if (name === 'Mars') {
       for (let i = 0; i < 8; i++) {
         ctx.strokeStyle = 'rgba(0,0,0,0.3)'
-        ctx.lineWidth   = 2
+        ctx.lineWidth = 2
         ctx.beginPath()
-        ctx.arc(
-          Math.random() * size, Math.random() * size,
-          5 + Math.random() * 15, 0, Math.PI * 2
-        )
+        ctx.arc(Math.random() * size, Math.random() * size, 5 + Math.random() * 15, 0, Math.PI * 2)
         ctx.stroke()
       }
     } else {
       for (let i = 0; i < 200; i++) {
         ctx.fillStyle = `rgba(255,255,255,${Math.random() * 0.06})`
         ctx.beginPath()
-        ctx.arc(
-          Math.random() * size, Math.random() * size,
-          Math.random() * 8, 0, Math.PI * 2
-        )
+        ctx.arc(Math.random() * size, Math.random() * size, Math.random() * 8, 0, Math.PI * 2)
         ctx.fill()
       }
     }
-
     return new THREE.CanvasTexture(canvas)
   }, [name, color])
 }
@@ -124,7 +100,6 @@ function usePlanetTexture(name, color) {
 function Trail({ body }) {
   const trail = body.trail || []
   if (trail.length < 2) return null
-
   const color = body.color || bodyColor(body.mass)
 
   const obj = useMemo(() => {
@@ -144,19 +119,11 @@ function Trail({ body }) {
 // ── Velocity Arrow ────────────────────────────────────────────────────────────
 function VelocityArrow({ start, end }) {
   const obj = useMemo(() => {
-    const points = [
-      new THREE.Vector3(0, 0, 0),
-      new THREE.Vector3(end.x - start.x, end.y - start.y, 0)
-    ]
+    const points   = [new THREE.Vector3(0,0,0), new THREE.Vector3(end.x - start.x, end.y - start.y, 0)]
     const geometry = new THREE.BufferGeometry().setFromPoints(points)
-    const material = new THREE.LineBasicMaterial({
-      color: new THREE.Color('#00e5ff'),
-      transparent: true,
-      opacity: 0.9
-    })
+    const material = new THREE.LineBasicMaterial({ color: new THREE.Color('#00e5ff'), transparent: true, opacity: 0.9 })
     return new THREE.Line(geometry, material)
   }, [start, end])
-
   return <primitive object={obj} />
 }
 
@@ -171,108 +138,191 @@ function Body({ body, isSelected, onSelect }) {
   const texture  = usePlanetTexture(body.name, color)
 
   useFrame(({ clock }) => {
-    if (meshRef.current) {
+    if (meshRef.current)
       meshRef.current.rotation.y = clock.elapsedTime * (isStar ? 0.05 : 0.2)
-    }
-    if (ringRef.current && isSelected) {
-      const s = 1 + Math.sin(clock.elapsedTime * 3) * 0.08
-      ringRef.current.scale.setScalar(s)
-    }
+    if (ringRef.current && isSelected)
+      ringRef.current.scale.setScalar(1 + Math.sin(clock.elapsedTime * 3) * 0.08)
   })
 
   return (
     <group position={[body.position.x, body.position.y, body.position.z]}>
-      {/* Atmosphere */}
       <mesh>
         <sphereGeometry args={[radius * 1.9, 16, 16]} />
-        <meshStandardMaterial
-          color={color}
-          emissive={color}
-          emissiveIntensity={isStar ? 5.0 : 1.2}
-          transparent
-          opacity={isStar ? 0.4 : 0.18}
-          side={THREE.BackSide}
-          depthWrite={false}
-        />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={isStar ? 0.6 : 0.25}
+          transparent opacity={isStar ? 0.4 : 0.18} side={THREE.BackSide} depthWrite={false} />
       </mesh>
-
-      {/* Body */}
-      <mesh
-        ref={meshRef}
-        onPointerDown={e => { e.stopPropagation(); onSelect(body.id) }}
-      >
+      <mesh ref={meshRef} onPointerDown={e => { e.stopPropagation(); onSelect(body.id) }}>
         <sphereGeometry args={[radius, 48, 48]} />
-        <meshStandardMaterial
-          map={isStar ? null : texture}
-          color={isStar ? color : '#ffffff'}
-          emissive={color}
-          emissiveIntensity={isStar ? 2.5 : 0.4}
-          roughness={isStar ? 0.8 : 0.6}
-          metalness={0.1}
-        />
+        <meshStandardMaterial map={isStar ? null : texture} color={isStar ? color : '#ffffff'}
+          emissive={color} emissiveIntensity={isStar ? 5.0 : 1.2} roughness={isStar ? 0.8 : 0.6} metalness={0.1} />
       </mesh>
-
-      {/* Star corona */}
-      {isStar && (
-        <Sparkles
-          count={40}
-          scale={radius * 4}
-          size={3}
-          speed={0.3}
-          color={color}
-          opacity={0.6}
-        />
-      )}
-
-      {/* Saturn rings */}
+      {isStar && <Sparkles count={40} scale={radius * 4} size={3} speed={0.3} color={color} opacity={0.6} />}
       {isSaturn && <SaturnRings radius={radius} />}
-
-      {/* Light */}
-      <pointLight
-        color={color}
-        intensity={isStar
-          ? Math.min(body.mass * 0.002, 12)
-          : Math.min(body.mass * 0.001, 3)}
-        distance={radius * (isStar ? 80 : 30)}
-        decay={2}
-      />
-
-      {/* Label */}
-      <Text
-        position={[0, radius + 6, 0]}
-        fontSize={4}
-        color={color}
-        anchorX="center"
-        anchorY="bottom"
-        renderOrder={999}
-        material-depthTest={false}
-      >
+      <pointLight color={color}
+        intensity={isStar ? Math.min(body.mass * 0.002, 12) : Math.min(body.mass * 0.001, 3)}
+        distance={radius * (isStar ? 80 : 30)} decay={2} />
+      <Text position={[0, radius + 6, 0]} fontSize={4} color={color}
+        anchorX="center" anchorY="bottom" renderOrder={999} material-depthTest={false}>
         {body.name}
       </Text>
-
-      {/* Selection ring */}
       {isSelected && (
         <mesh ref={ringRef} rotation={[Math.PI / 2, 0, 0]}>
           <ringGeometry args={[radius * 1.9, radius * 2.1, 64]} />
-          <meshBasicMaterial
-            color="#00e5ff"
-            transparent
-            opacity={0.85}
-            side={THREE.DoubleSide}
-          />
+          <meshBasicMaterial color="#00e5ff" transparent opacity={0.85} side={THREE.DoubleSide} />
         </mesh>
       )}
     </group>
   )
 }
 
+// ── Camera Controller ─────────────────────────────────────────────────────────
+function CameraController() {
+  const { camera } = useThree()
+  const bodies       = useSimulation(s => s.bodies)
+  const lockedBodyId = useSimulation(s => s.lockedBodyId)
+  const cameraMode   = useSimulation(s => s.cameraMode)
+  const setCameraMode = useSimulation(s => s.setCameraMode)
+
+  const targetPos  = useRef(new THREE.Vector3())
+  const currentPos = useRef(camera.position.clone())
+  const isAnimating = useRef(false)
+  const animTarget  = useRef(new THREE.Vector3())
+  const animLookAt  = useRef(new THREE.Vector3())
+  const animProgress = useRef(0)
+
+  // Zoom to fit all bodies
+  useEffect(() => {
+    if (cameraMode !== 'zoomfit' || bodies.length === 0) return
+
+    const positions = bodies.map(b => b.position)
+    const center = positions.reduce(
+      (acc, p) => acc.add(new THREE.Vector3(p.x, p.y, p.z)),
+      new THREE.Vector3()
+    ).divideScalar(positions.length)
+
+    const maxDist = Math.max(...positions.map(p =>
+      new THREE.Vector3(p.x, p.y, p.z).distanceTo(center)
+    ))
+
+    const fitDist = Math.max(maxDist * 2.5, 200)
+    animTarget.current.set(center.x, center.y, center.z + fitDist)
+    animLookAt.current.copy(center)
+    animProgress.current = 0
+    isAnimating.current  = true
+    setCameraMode('free')
+  }, [cameraMode])
+
+  // Snap to top-down view
+  useEffect(() => {
+    if (cameraMode !== 'topdown') return
+    const center = new THREE.Vector3(0, 0, 0)
+    animTarget.current.set(0, 600, 0)
+    animLookAt.current.copy(center)
+    animProgress.current = 0
+    isAnimating.current  = true
+    setCameraMode('free')
+  }, [cameraMode])
+
+  // Snap to side view
+  useEffect(() => {
+    if (cameraMode !== 'side') return
+    animTarget.current.set(600, 0, 0)
+    animLookAt.current.set(0, 0, 0)
+    animProgress.current = 0
+    isAnimating.current  = true
+    setCameraMode('free')
+  }, [cameraMode])
+
+  useFrame((_, delta) => {
+    // Smooth camera animation
+    if (isAnimating.current) {
+      animProgress.current = Math.min(animProgress.current + delta * 2, 1)
+      const t = 1 - Math.pow(1 - animProgress.current, 3) // ease out cubic
+      camera.position.lerp(animTarget.current, t * 0.1)
+      camera.lookAt(animLookAt.current)
+      if (animProgress.current >= 1) isAnimating.current = false
+      return
+    }
+
+    // Lock camera to body
+    if (lockedBodyId) {
+      const body = bodies.find(b => b.id === lockedBodyId)
+      if (body) {
+        const radius = bodyRadius(body.mass)
+        const offset = new THREE.Vector3(0, radius * 3, radius * 10)
+        const targetCamPos = new THREE.Vector3(
+          body.position.x + offset.x,
+          body.position.y + offset.y,
+          body.position.z + offset.z
+        )
+        camera.position.lerp(targetCamPos, 0.05)
+        targetPos.current.set(body.position.x, body.position.y, body.position.z)
+        camera.lookAt(targetPos.current)
+      }
+    }
+  })
+
+  return null
+}
+
+// ── Keyboard Shortcuts ────────────────────────────────────────────────────────
+function KeyboardShortcuts() {
+  const togglePause  = useSimulation(s => s.togglePause)
+  const clearAll     = useSimulation(s => s.clearAll)
+  const loadPreset   = useSimulation(s => s.loadPreset)
+  const setCameraMode = useSimulation(s => s.setCameraMode)
+  const setLockedBodyId = useSimulation(s => s.setLockedBodyId)
+
+  useEffect(() => {
+    const onKey = (e) => {
+      // Don't fire if typing in an input
+      if (e.target.tagName === 'INPUT') return
+
+      switch (e.code) {
+        case 'Space':
+          e.preventDefault()
+          togglePause()
+          break
+        case 'KeyC':
+          clearAll()
+          break
+        case 'KeyR':
+          setCameraMode('zoomfit')
+          break
+        case 'KeyT':
+          setCameraMode('topdown')
+          break
+        case 'KeyS':
+          setCameraMode('side')
+          break
+        case 'Escape':
+          setLockedBodyId(null)
+          break
+        case 'Digit1':
+          loadPreset('Binary Star')
+          break
+        case 'Digit2':
+          loadPreset('Solar System')
+          break
+        case 'Digit3':
+          loadPreset('Figure-8')
+          break
+        case 'Digit4':
+          loadPreset('Chaos')
+          break
+      }
+    }
+
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
+  return null
+}
+
 // ── Physics Loop ──────────────────────────────────────────────────────────────
 function PhysicsLoop() {
-  const {
-    bodies, paused, G, dt, timeScale,
-    updateBodies, addCollisionFlash
-  } = useSimulation()
-
+  const { bodies, paused, G, dt, timeScale, updateBodies, addCollisionFlash } = useSimulation()
   const refs = useRef({ bodies, paused, G, timeScale })
 
   useEffect(() => { refs.current.bodies    = bodies    }, [bodies])
@@ -334,7 +384,6 @@ function PlacementGhost({ pendingMass }) {
       if (phase === 'positioning') setGhostPos(p.clone())
       else                         setDragEnd(p.clone())
     }
-
     const onDown = (e) => {
       if (e.button !== 0) return
       if (phase === 'positioning') {
@@ -345,7 +394,6 @@ function PlacementGhost({ pendingMass }) {
         setPhase('velocity')
       }
     }
-
     const onUp = (e) => {
       if (e.button !== 0) return
       if (phase === 'velocity' && startPos) {
@@ -387,14 +435,9 @@ function PlacementGhost({ pendingMass }) {
     <group position={[pos.x, pos.y, pos.z]}>
       <mesh>
         <sphereGeometry args={[radius, 24, 24]} />
-        <meshStandardMaterial
-          color={color}
-          emissive={color}
-          emissiveIntensity={1}
-          transparent
-          opacity={phase === 'positioning' ? 0.4 : 0.85}
-          wireframe={phase === 'positioning'}
-        />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={1}
+          transparent opacity={phase === 'positioning' ? 0.4 : 0.85}
+          wireframe={phase === 'positioning'} />
       </mesh>
       {phase === 'velocity' && dragEnd && (
         <VelocityArrow start={pos} end={dragEnd} />
@@ -416,21 +459,18 @@ function Scene({ pendingMass }) {
       <Nebula />
       <Starfield />
       <PhysicsLoop />
+      <CameraController />
+      <KeyboardShortcuts />
       <CollisionFlashes />
 
       {bodies.map(body => (
         <Trail key={`trail-${body.id}`} body={body} />
       ))}
-
       {bodies.map(body => (
-        <Body
-          key={body.id}
-          body={body}
+        <Body key={body.id} body={body}
           isSelected={body.id === selectedBodyId}
-          onSelect={selectBody}
-        />
+          onSelect={selectBody} />
       ))}
-
       {placementMode === 'placing' && (
         <PlacementGhost pendingMass={pendingMass} />
       )}
@@ -449,11 +489,7 @@ export default function SimulationCanvas({ pendingMass }) {
     >
       <Canvas
         camera={{ fov: 60, position: [0, 0, 600], near: 0.1, far: 20000 }}
-        gl={{
-          antialias: true,
-          toneMapping: THREE.ACESFilmicToneMapping,
-          toneMappingExposure: 1.2
-        }}
+        gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.2 }}
         style={{ background: '#02020f' }}
       >
         <Scene pendingMass={pendingMass} />

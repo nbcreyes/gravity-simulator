@@ -1,29 +1,34 @@
 import { useSimulation } from '../store/simulation.js'
 
-const PRESETS      = [
+const PRESETS = [
   { name: 'Binary Star',  icon: '⭐' },
   { name: 'Solar System', icon: '🪐' },
   { name: 'Figure-8',     icon: '♾️'  },
   { name: 'Chaos',        icon: '💥' },
 ]
+
 const TIME_PRESETS = [0.1, 0.5, 1, 5, 20]
 
 export default function ControlPanel({ pendingMass, setPendingMass, fps }) {
-  const paused       = useSimulation(s => s.paused)
-  const bodies       = useSimulation(s => s.bodies)
-  const G            = useSimulation(s => s.G)
-  const timeScale    = useSimulation(s => s.timeScale)
-  const togglePause  = useSimulation(s => s.togglePause)
-  const clearAll     = useSimulation(s => s.clearAll)
-  const loadPreset   = useSimulation(s => s.loadPreset)
-  const setPlacement = useSimulation(s => s.setPlacementMode)
-  const setG         = useSimulation(s => s.setG)
-  const setTimeScale = useSimulation(s => s.setTimeScale)
-  const placement    = useSimulation(s => s.placementMode)
+  const paused          = useSimulation(s => s.paused)
+  const bodies          = useSimulation(s => s.bodies)
+  const G               = useSimulation(s => s.G)
+  const timeScale       = useSimulation(s => s.timeScale)
+  const togglePause     = useSimulation(s => s.togglePause)
+  const clearAll        = useSimulation(s => s.clearAll)
+  const loadPreset      = useSimulation(s => s.loadPreset)
+  const setPlacement    = useSimulation(s => s.setPlacementMode)
+  const setG            = useSimulation(s => s.setG)
+  const setTimeScale    = useSimulation(s => s.setTimeScale)
+  const placement       = useSimulation(s => s.placementMode)
+  const setCameraMode   = useSimulation(s => s.setCameraMode)
+  const lockedBodyId    = useSimulation(s => s.lockedBodyId)
+  const setLockedBodyId = useSimulation(s => s.setLockedBodyId)
 
-  const logMass      = v  => Math.round(Math.exp(Math.log(1000) * v / 100))
-  const massToSlider = m  => Math.round(Math.log(m) / Math.log(1000) * 100)
-  const timeLabel    = timeScale < 1
+  const logMass      = v => Math.round(Math.exp(Math.log(1000) * v / 100))
+  const massToSlider = m => Math.round(Math.log(m) / Math.log(1000) * 100)
+
+  const timeLabel = timeScale < 1
     ? `${timeScale.toFixed(2)}x`
     : timeScale < 10
     ? `${timeScale.toFixed(1)}x`
@@ -31,13 +36,15 @@ export default function ControlPanel({ pendingMass, setPendingMass, fps }) {
 
   return (
     <div
-      className="fixed left-4 top-4 z-20 p-4 flex flex-col gap-4"
+      className="fixed left-4 top-4 z-20 p-4 flex flex-col gap-4 overflow-y-auto"
       style={{
         width: 248,
+        maxHeight: 'calc(100vh - 32px)',
         background: 'rgba(6,6,18,0.82)',
         backdropFilter: 'blur(24px)',
         border: '1px solid rgba(255,255,255,0.07)',
-        borderRadius: 14
+        borderRadius: 14,
+        scrollbarWidth: 'none'
       }}
     >
       {/* Title */}
@@ -64,7 +71,9 @@ export default function ControlPanel({ pendingMass, setPendingMass, fps }) {
         </button>
         <div className="flex flex-col gap-1.5">
           <div className="flex justify-between">
-            <label className="font-orbitron text-[9px] text-gray-500 tracking-widest">MASS</label>
+            <label className="font-orbitron text-[9px] text-gray-500 tracking-widest">
+              MASS
+            </label>
             <span className="font-mono text-[11px] text-white/70">{pendingMass} M</span>
           </div>
           <input
@@ -78,7 +87,7 @@ export default function ControlPanel({ pendingMass, setPendingMass, fps }) {
 
       <div className="w-full h-px bg-white/5" />
 
-      {/* Controls */}
+      {/* Simulation controls */}
       <div className="flex gap-2">
         <button className="btn-primary flex-1" onClick={togglePause}>
           {paused ? '▶  RESUME' : '⏸  PAUSE'}
@@ -91,7 +100,9 @@ export default function ControlPanel({ pendingMass, setPendingMass, fps }) {
       {/* G slider */}
       <div className="flex flex-col gap-1.5">
         <div className="flex justify-between">
-          <label className="font-orbitron text-[9px] text-gray-500 tracking-widest">GRAVITY  G</label>
+          <label className="font-orbitron text-[9px] text-gray-500 tracking-widest">
+            GRAVITY  G
+          </label>
           <span className="font-mono text-[11px] text-white/70">{G.toFixed(2)}</span>
         </div>
         <input
@@ -104,7 +115,9 @@ export default function ControlPanel({ pendingMass, setPendingMass, fps }) {
       {/* Time scale */}
       <div className="flex flex-col gap-1.5">
         <div className="flex justify-between">
-          <label className="font-orbitron text-[9px] text-gray-500 tracking-widest">TIME SCALE</label>
+          <label className="font-orbitron text-[9px] text-gray-500 tracking-widest">
+            TIME SCALE
+          </label>
           <span className="font-mono text-[11px] text-white/70">{timeLabel}</span>
         </div>
         <input
@@ -154,6 +167,44 @@ export default function ControlPanel({ pendingMass, setPendingMass, fps }) {
 
       <div className="w-full h-px bg-white/5" />
 
+      {/* Camera controls */}
+      <div className="flex flex-col gap-1.5">
+        <label className="font-orbitron text-[9px] text-gray-500 tracking-widest mb-0.5">
+          CAMERA
+        </label>
+        <div className="grid grid-cols-3 gap-1">
+          {[
+            { label: 'FIT',  mode: 'zoomfit', key: 'R' },
+            { label: 'TOP',  mode: 'topdown', key: 'T' },
+            { label: 'SIDE', mode: 'side',    key: 'S' },
+          ].map(btn => (
+            <button
+              key={btn.mode}
+              onClick={() => setCameraMode(btn.mode)}
+              className="font-orbitron text-[8px] py-1.5 rounded transition-all flex flex-col items-center gap-0.5"
+              style={{
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.07)',
+                color: '#888'
+              }}
+            >
+              <span>{btn.label}</span>
+              <span style={{ color: '#444', fontSize: 7 }}>{btn.key}</span>
+            </button>
+          ))}
+        </div>
+        {lockedBodyId && (
+          <button
+            className="btn-primary mt-1"
+            onClick={() => setLockedBodyId(null)}
+          >
+            🔓 UNLOCK CAMERA
+          </button>
+        )}
+      </div>
+
+      <div className="w-full h-px bg-white/5" />
+
       {/* Stats */}
       <div className="flex justify-between items-end">
         <div>
@@ -168,6 +219,34 @@ export default function ControlPanel({ pendingMass, setPendingMass, fps }) {
             {fps}
           </p>
         </div>
+      </div>
+
+      <div className="w-full h-px bg-white/5" />
+
+      {/* Keyboard shortcuts */}
+      <div className="flex flex-col gap-1">
+        <label className="font-orbitron text-[9px] text-gray-500 tracking-widest mb-0.5">
+          SHORTCUTS
+        </label>
+        {[
+          ['SPACE', 'Pause'],
+          ['C',     'Clear'],
+          ['R',     'Fit view'],
+          ['T',     'Top view'],
+          ['S',     'Side view'],
+          ['1-4',   'Presets'],
+          ['ESC',   'Unlock cam'],
+        ].map(([key, label]) => (
+          <div key={key} className="flex justify-between items-center">
+            <span className="font-mono text-[9px] text-gray-600">{label}</span>
+            <span
+              className="font-orbitron text-[8px] px-1.5 py-0.5 rounded"
+              style={{ background: 'rgba(255,255,255,0.06)', color: '#555' }}
+            >
+              {key}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   )
