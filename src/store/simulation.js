@@ -14,26 +14,26 @@ export const useSimulation = create((set) => ({
   collisionFlashes: [],
   lockedBodyId: null,
   cameraMode: 'free',
+  showEnergy: false,
+  showCenterOfMass: false,
+  showLagrange: false,
+  showOrbitalElements: false,
 
-  addBody: (body) => set(state => ({
-    bodies: [...state.bodies, body]
-  })),
+  addBody: (body) => set(state => ({ bodies: [...state.bodies, body] })),
 
   removeBody: (id) => set(state => ({
     bodies: state.bodies.filter(b => b.id !== id),
     selectedBodyId: state.selectedBodyId === id ? null : state.selectedBodyId,
-    lockedBodyId: state.lockedBodyId === id ? null : state.lockedBodyId
+    lockedBodyId:   state.lockedBodyId   === id ? null : state.lockedBodyId
   })),
 
-  updateBodies: (newBodies) => set({ bodies: newBodies }),
-
+  updateBodies:    (newBodies) => set({ bodies: newBodies }),
   updateBody: (id, updates) => set(state => ({
     bodies: state.bodies.map(b => b.id === id ? { ...b, ...updates } : b)
   })),
 
   incrementTime: (dt) => set(state => ({ simTime: state.simTime + dt })),
-
-  togglePause: () => set(state => ({ paused: !state.paused })),
+  togglePause:   () => set(state => ({ paused: !state.paused })),
 
   clearAll: () => set({
     bodies: [],
@@ -55,17 +55,21 @@ export const useSimulation = create((set) => ({
     simTime: 0
   }),
 
-  selectBody: (id) => set({ selectedBodyId: id }),
+  selectBody:       (id)   => set({ selectedBodyId: id }),
   setPlacementMode: (mode) => set({ placementMode: mode }),
-  setG: (G) => set({ G }),
-  setTimeScale: (ts) => set({ timeScale: ts }),
-  setLockedBodyId: (id) => set({ lockedBodyId: id, cameraMode: id ? 'locked' : 'free' }),
-  setCameraMode: (mode) => set({ cameraMode: mode, lockedBodyId: null }),
+  setG:             (G)    => set({ G }),
+  setTimeScale:     (ts)   => set({ timeScale: ts }),
+  setLockedBodyId:  (id)   => set({ lockedBodyId: id, cameraMode: id ? 'locked' : 'free' }),
+  setCameraMode:    (mode) => set({ cameraMode: mode, lockedBodyId: null }),
+
+  toggleEnergy:         () => set(state => ({ showEnergy:         !state.showEnergy })),
+  toggleCenterOfMass:   () => set(state => ({ showCenterOfMass:   !state.showCenterOfMass })),
+  toggleLagrange:       () => set(state => ({ showLagrange:       !state.showLagrange })),
+  toggleOrbitalElements:() => set(state => ({ showOrbitalElements:!state.showOrbitalElements })),
 
   addCollisionFlash: (flash) => set(state => ({
     collisionFlashes: [...state.collisionFlashes, flash]
   })),
-
   removeCollisionFlash: (id) => set(state => ({
     collisionFlashes: state.collisionFlashes.filter(f => f.id !== id)
   }))

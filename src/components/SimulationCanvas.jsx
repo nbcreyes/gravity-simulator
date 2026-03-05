@@ -4,6 +4,7 @@ import { OrbitControls, Points, PointMaterial, Text, Sparkles } from '@react-thr
 import * as THREE from 'three'
 import { useSimulation } from '../store/simulation.js'
 import { stepSimulation, bodyRadius, bodyColor } from '../physics/engine.js'
+import { computeLagrangePoints, computeCenterOfMass } from '../physics/analysis.js'
 import CollisionFlashes from './CollisionFlash.jsx'
 import Nebula from './Nebula.jsx'
 import ContextMenu from './ContextMenu.jsx'
@@ -202,9 +203,8 @@ function Body({ body, isSelected, onSelect, onContextMenu }) {
         onPointerDown={e => { e.stopPropagation(); onSelect(body.id) }}
         onContextMenu={e => {
           e.stopPropagation()
-          if (onContextMenu) {
+          if (onContextMenu)
             onContextMenu(body, e.nativeEvent.clientX, e.nativeEvent.clientY)
-          }
         }}
       >
         <sphereGeometry args={[radius, 48, 48]} />
@@ -272,6 +272,102 @@ function Body({ body, isSelected, onSelect, onContextMenu }) {
   )
 }
 
+// ── Center of Mass ────────────────────────────────────────────────────────────
+function CenterOfMass() {
+  const bodies           = useSimulation(s => s.bodies)
+  const showCenterOfMass = useSimulation(s => s.showCenterOfMass)
+  const meshRef          = useRef()
+
+  useFrame(({ clock }) => {
+    if (meshRef.current)
+      meshRef.current.rotation.z = clock.elapsedTime * 0.5
+  })
+
+  if (!showCenterOfMass || bodies.length < 2) return null
+
+  const pos = computeCenterOfMass(bodies)
+
+  return (
+    <group position={[pos.x, pos.y, pos.z]}>
+      <mesh ref={meshRef}>
+        <ringGeometry args={[3, 5, 32]} />
+        <meshBasicMaterial
+          color="#00e5ff"
+          transparent
+          opacity={0.6}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+      <mesh rotation={[Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[3, 5, 32]} />
+        <meshBasicMaterial
+          color="#00e5ff"
+          transparent
+          opacity={0.3}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+      <pointLight color="#00e5ff" intensity={2} distance={50} />
+      <Text
+        position={[0, 8, 0]}
+        fontSize={3}
+        color="#00e5ff"
+        anchorX="center"
+        anchorY="bottom"
+        renderOrder={999}
+        material-depthTest={false}
+      >
+        COM
+      </Text>
+    </group>
+  )
+}
+
+// ── Lagrange Points ───────────────────────────────────────────────────────────
+function LagrangePoints() {
+  const bodies       = useSimulation(s => s.bodies)
+  const showLagrange = useSimulation(s => s.showLagrange)
+
+  if (!showLagrange || bodies.length < 2) return null
+
+  const sorted    = [...bodies].sort((a, b) => b.mass - a.mass)
+  const primary   = sorted[0]
+  const secondary = sorted[1]
+  const points    = computeLagrangePoints(primary, secondary)
+
+  return (
+    <>
+      {points.map(lp => (
+        <group
+          key={lp.label}
+          position={[lp.position.x, lp.position.y, lp.position.z]}
+        >
+          <mesh>
+            <octahedronGeometry args={[3, 0]} />
+            <meshBasicMaterial
+              color="#ffd54f"
+              transparent
+              opacity={0.7}
+              wireframe
+            />
+          </mesh>
+          <Text
+            position={[0, 6, 0]}
+            fontSize={3.5}
+            color="#ffd54f"
+            anchorX="center"
+            anchorY="bottom"
+            renderOrder={999}
+            material-depthTest={false}
+          >
+            {lp.label}
+          </Text>
+        </group>
+      ))}
+    </>
+  )
+}
+
 // ── Camera Controller ─────────────────────────────────────────────────────────
 function CameraController() {
   const { camera }    = useThree()
@@ -280,10 +376,10 @@ function CameraController() {
   const cameraMode    = useSimulation(s => s.cameraMode)
   const setCameraMode = useSimulation(s => s.setCameraMode)
 
-  const isAnimating   = useRef(false)
-  const animTarget    = useRef(new THREE.Vector3())
-  const animLookAt    = useRef(new THREE.Vector3())
-  const animProgress  = useRef(0)
+  const isAnimating  = useRef(false)
+  const animTarget   = useRef(new THREE.Vector3())
+  const animLookAt   = useRef(new THREE.Vector3())
+  const animProgress = useRef(0)
 
   useEffect(() => {
     if (cameraMode !== 'zoomfit' || bodies.length === 0) return
@@ -295,7 +391,11 @@ function CameraController() {
     const maxDist = Math.max(...positions.map(p =>
       new THREE.Vector3(p.x, p.y, p.z).distanceTo(center)
     ))
-    animTarget.current.set(center.x, center.y, center.z + Math.max(maxDist * 2.5, 200))
+    animTarget.current.set(
+      center.x,
+      center.y,
+      center.z + Math.max(maxDist * 2.5, 200)
+    )
     animLookAt.current.copy(center)
     animProgress.current = 0
     isAnimating.current  = true
@@ -557,6 +657,8 @@ function Scene({ pendingMass, onToggleShortcuts, onContextMenu }) {
       <CameraController />
       <KeyboardShortcuts onToggleShortcuts={onToggleShortcuts} />
       <CollisionFlashes />
+      <CenterOfMass />
+      <LagrangePoints />
 
       {bodies.map(body => (
         <Trail key={`trail-${body.id}`} body={body} />

@@ -5,11 +5,13 @@ import BodyInspector from './components/BodyInspector.jsx'
 import SimClock from './components/SimClock.jsx'
 import OrbitMap from './components/OrbitMap.jsx'
 import ShortcutOverlay from './components/ShortcutOverlay.jsx'
+import EnergyDisplay from './components/EnergyDisplay.jsx'
+import OrbitalElements from './components/OrbitalElements.jsx'
 
 export default function App() {
-  const [pendingMass,      setPendingMass]      = useState(100)
-  const [fps,              setFps]              = useState(60)
-  const [showShortcuts,    setShowShortcuts]    = useState(false)
+  const [pendingMass,   setPendingMass]   = useState(100)
+  const [fps,           setFps]           = useState(60)
+  const [showShortcuts, setShowShortcuts] = useState(false)
 
   const frameCount = useRef(0)
   const lastTime   = useRef(performance.now())
@@ -48,6 +50,8 @@ export default function App() {
       />
       <BodyInspector />
       <OrbitMap />
+      <EnergyDisplay />
+      <OrbitalElements />
       <ShortcutOverlay
         visible={showShortcuts}
         onClose={() => setShowShortcuts(false)}

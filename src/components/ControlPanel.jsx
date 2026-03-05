@@ -10,20 +10,28 @@ const PRESETS = [
 const TIME_PRESETS = [0.1, 0.5, 1, 5, 20]
 
 export default function ControlPanel({ pendingMass, setPendingMass, fps, onToggleShortcuts }) {
-  const paused          = useSimulation(s => s.paused)
-  const bodies          = useSimulation(s => s.bodies)
-  const G               = useSimulation(s => s.G)
-  const timeScale       = useSimulation(s => s.timeScale)
-  const togglePause     = useSimulation(s => s.togglePause)
-  const clearAll        = useSimulation(s => s.clearAll)
-  const loadPreset      = useSimulation(s => s.loadPreset)
-  const setPlacement    = useSimulation(s => s.setPlacementMode)
-  const setG            = useSimulation(s => s.setG)
-  const setTimeScale    = useSimulation(s => s.setTimeScale)
-  const placement       = useSimulation(s => s.placementMode)
-  const setCameraMode   = useSimulation(s => s.setCameraMode)
-  const lockedBodyId    = useSimulation(s => s.lockedBodyId)
-  const setLockedBodyId = useSimulation(s => s.setLockedBodyId)
+  const paused                = useSimulation(s => s.paused)
+  const bodies                = useSimulation(s => s.bodies)
+  const G                     = useSimulation(s => s.G)
+  const timeScale             = useSimulation(s => s.timeScale)
+  const togglePause           = useSimulation(s => s.togglePause)
+  const clearAll              = useSimulation(s => s.clearAll)
+  const loadPreset            = useSimulation(s => s.loadPreset)
+  const setPlacement          = useSimulation(s => s.setPlacementMode)
+  const setG                  = useSimulation(s => s.setG)
+  const setTimeScale          = useSimulation(s => s.setTimeScale)
+  const placement             = useSimulation(s => s.placementMode)
+  const setCameraMode         = useSimulation(s => s.setCameraMode)
+  const lockedBodyId          = useSimulation(s => s.lockedBodyId)
+  const setLockedBodyId       = useSimulation(s => s.setLockedBodyId)
+  const showEnergy            = useSimulation(s => s.showEnergy)
+  const showCenterOfMass      = useSimulation(s => s.showCenterOfMass)
+  const showLagrange          = useSimulation(s => s.showLagrange)
+  const showOrbitalElements   = useSimulation(s => s.showOrbitalElements)
+  const toggleEnergy          = useSimulation(s => s.toggleEnergy)
+  const toggleCenterOfMass    = useSimulation(s => s.toggleCenterOfMass)
+  const toggleLagrange        = useSimulation(s => s.toggleLagrange)
+  const toggleOrbitalElements = useSimulation(s => s.toggleOrbitalElements)
 
   const logMass      = v => Math.round(Math.exp(Math.log(1000) * v / 100))
   const massToSlider = m => Math.round(Math.log(m) / Math.log(1000) * 100)
@@ -71,7 +79,6 @@ export default function ControlPanel({ pendingMass, setPendingMass, fps, onToggl
         >
           {placement === 'placing' ? '◎  PLACING...' : '+  PLACE BODY'}
         </button>
-
         <div className="flex flex-col gap-1.5">
           <div className="flex justify-between">
             <label className="font-orbitron text-[9px] text-gray-500 tracking-widest">
@@ -222,7 +229,6 @@ export default function ControlPanel({ pendingMass, setPendingMass, fps, onToggl
             </button>
           ))}
         </div>
-
         {lockedBodyId && (
           <button
             className="btn-primary mt-1"
@@ -231,6 +237,48 @@ export default function ControlPanel({ pendingMass, setPendingMass, fps, onToggl
             🔓  UNLOCK CAMERA
           </button>
         )}
+      </div>
+
+      <div className="w-full h-px bg-white/5" />
+
+      {/* Physics overlays */}
+      <div className="flex flex-col gap-1.5">
+        <label className="font-orbitron text-[9px] text-gray-500 tracking-widest mb-0.5">
+          OVERLAYS
+        </label>
+        {[
+          { label: 'ENERGY',       active: showEnergy,          toggle: toggleEnergy          },
+          { label: 'CENTER MASS',  active: showCenterOfMass,    toggle: toggleCenterOfMass    },
+          { label: 'LAGRANGE PTS', active: showLagrange,        toggle: toggleLagrange        },
+          { label: 'ORBITAL DATA', active: showOrbitalElements, toggle: toggleOrbitalElements },
+        ].map(item => (
+          <button
+            key={item.label}
+            onClick={item.toggle}
+            className="flex justify-between items-center px-3 py-1.5 rounded transition-all"
+            style={{
+              background: item.active
+                ? 'rgba(0,229,255,0.1)'
+                : 'rgba(255,255,255,0.03)',
+              border: `1px solid ${item.active
+                ? 'rgba(0,229,255,0.35)'
+                : 'rgba(255,255,255,0.06)'}`,
+            }}
+          >
+            <span
+              className="font-orbitron text-[9px] tracking-widest"
+              style={{ color: item.active ? '#00e5ff' : '#555' }}
+            >
+              {item.label}
+            </span>
+            <span
+              className="font-orbitron text-[8px]"
+              style={{ color: item.active ? '#00e5ff' : '#333' }}
+            >
+              {item.active ? 'ON' : 'OFF'}
+            </span>
+          </button>
+        ))}
       </div>
 
       <div className="w-full h-px bg-white/5" />
@@ -257,7 +305,7 @@ export default function ControlPanel({ pendingMass, setPendingMass, fps, onToggl
 
       <div className="w-full h-px bg-white/5" />
 
-      {/* Keyboard shortcuts list */}
+      {/* Keyboard shortcuts */}
       <div className="flex flex-col gap-1">
         <label className="font-orbitron text-[9px] text-gray-500 tracking-widest mb-0.5">
           SHORTCUTS

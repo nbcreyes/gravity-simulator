@@ -1,27 +1,33 @@
 import { useSimulation } from '../store/simulation.js'
 
-function formatTime(t) {
-  // t is in simulation time units
-  // We treat 1 unit ≈ 1 simulation day for display
-  const totalDays  = Math.floor(t)
-  const years      = Math.floor(totalDays / 365)
-  const days       = totalDays % 365
-  const hours      = Math.floor((t - totalDays) * 24)
+// Earth orbit calibration:
+// r = 145, M = 10000, G = 1.0
+// v = sqrt(G*M/r) = sqrt(10000/145) ≈ 8.299
+// circumference = 2π * 145 ≈ 911 units
+// one orbit = 911 / 8.299 ≈ 109.8 ticks
+// one orbit = 365 days
+// therefore 1 tick = 365 / 109.8 ≈ 3.324 days
+const DAYS_PER_TICK = 365 / (2 * Math.PI * 145 / Math.sqrt(1.0 * 10000 / 145))
+
+function formatTime(totalDays) {
+  const years = Math.floor(totalDays / 365)
+  const days  = Math.floor(totalDays % 365)
+  const hours = Math.floor((totalDays - Math.floor(totalDays)) * 24)
 
   if (years > 0) {
     return {
-      primary: `${years.toLocaleString()} yr ${days} d`,
+      primary:   `${years.toLocaleString()} yr  ${days} d`,
       secondary: 'ELAPSED'
     }
   }
-  if (totalDays > 0) {
+  if (days > 0) {
     return {
-      primary: `${days} d ${hours} hr`,
+      primary:   `${days} d  ${hours} hr`,
       secondary: 'ELAPSED'
     }
   }
   return {
-    primary: `${hours} hr`,
+    primary:   `${hours} hr`,
     secondary: 'ELAPSED'
   }
 }
@@ -29,7 +35,9 @@ function formatTime(t) {
 export default function SimClock() {
   const simTime = useSimulation(s => s.simTime)
   const paused  = useSimulation(s => s.paused)
-  const { primary, secondary } = formatTime(simTime)
+
+  const totalDays = simTime * DAYS_PER_TICK
+  const { primary, secondary } = formatTime(totalDays)
 
   return (
     <div
@@ -44,7 +52,6 @@ export default function SimClock() {
       }}
     >
       <div className="flex items-center gap-2">
-        {/* Pulse indicator */}
         <div
           className="w-1.5 h-1.5 rounded-full"
           style={{
