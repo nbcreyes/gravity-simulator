@@ -12,14 +12,15 @@ export default function ShortcutOverlay({ visible, onClose }) {
   ]
 
   const presets = [
-    { key: '1', desc: 'Binary Star'      },
-    { key: '2', desc: 'Solar System'     },
-    { key: '3', desc: 'Figure-8'         },
-    { key: '4', desc: 'Chaos'            },
-    { key: '5', desc: 'Trojan Asteroids' },
-    { key: '6', desc: 'Galaxy Collision' },
-    { key: '7', desc: 'Pulsar System'    },
-    { key: '8', desc: 'Rogue Planet'     },
+    { key: '1', desc: 'Binary Star'       },
+    { key: '2', desc: 'Solar System'      },
+    { key: '3', desc: 'Full Solar System' },
+    { key: '4', desc: 'Figure-8'          },
+    { key: '5', desc: 'Chaos'             },
+    { key: '6', desc: 'Trojan Asteroids'  },
+    { key: '7', desc: 'Galaxy Collision'  },
+    { key: '8', desc: 'Pulsar System'     },
+    { key: '9', desc: 'Rogue Planet'      },
   ]
 
   return (
@@ -46,8 +47,10 @@ export default function ShortcutOverlay({ visible, onClose }) {
             <h2 className="font-orbitron text-sm font-bold tracking-widest text-white">
               KEYBOARD SHORTCUTS
             </h2>
-            <p className="font-orbitron text-[9px] tracking-widest mt-0.5"
-               style={{ color: '#00e5ff55' }}>
+            <p
+              className="font-orbitron text-[9px] tracking-widest mt-0.5"
+              style={{ color: '#00e5ff55' }}
+            >
               GRAVITAS 3D GRAVITY SIMULATOR
             </p>
           </div>
@@ -63,8 +66,10 @@ export default function ShortcutOverlay({ visible, onClose }) {
 
         {/* Simulation controls */}
         <div className="flex flex-col gap-1.5">
-          <p className="font-orbitron text-[9px] tracking-widest mb-1"
-             style={{ color: '#00e5ff88' }}>
+          <p
+            className="font-orbitron text-[9px] tracking-widest mb-1"
+            style={{ color: '#00e5ff88' }}
+          >
             SIMULATION
           </p>
           {shortcuts.map(s => (
@@ -76,8 +81,10 @@ export default function ShortcutOverlay({ visible, onClose }) {
 
         {/* Presets */}
         <div className="flex flex-col gap-1.5">
-          <p className="font-orbitron text-[9px] tracking-widest mb-1"
-             style={{ color: '#ffd54f88' }}>
+          <p
+            className="font-orbitron text-[9px] tracking-widest mb-1"
+            style={{ color: '#ffd54f88' }}
+          >
             PRESETS
           </p>
           <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
@@ -91,17 +98,19 @@ export default function ShortcutOverlay({ visible, onClose }) {
 
         {/* Mouse controls */}
         <div className="flex flex-col gap-1.5">
-          <p className="font-orbitron text-[9px] tracking-widest mb-1"
-             style={{ color: '#ffffff33' }}>
+          <p
+            className="font-orbitron text-[9px] tracking-widest mb-1"
+            style={{ color: '#ffffff33' }}
+          >
             MOUSE
           </p>
           {[
-            { key: 'LMB',        desc: 'Select / place body'     },
-            { key: 'RMB',        desc: 'Context menu on body'    },
-            { key: 'DRAG',       desc: 'Set initial velocity'    },
-            { key: 'SCROLL',     desc: 'Zoom in / out'           },
-            { key: 'MMB DRAG',   desc: 'Pan camera'              },
-            { key: 'RMB DRAG',   desc: 'Orbit camera'            },
+            { key: 'LMB',      desc: 'Select / place body'  },
+            { key: 'RMB',      desc: 'Context menu on body' },
+            { key: 'DRAG',     desc: 'Set initial velocity' },
+            { key: 'SCROLL',   desc: 'Zoom in / out'        },
+            { key: 'MMB DRAG', desc: 'Pan camera'           },
+            { key: 'RMB DRAG', desc: 'Orbit camera'         },
           ].map(s => (
             <ShortcutRow key={s.key} shortcut={s.key} desc={s.desc} accent="#ffffff44" />
           ))}
@@ -130,8 +139,8 @@ function ShortcutRow({ shortcut, desc, accent = '#00e5ff' }) {
         className="font-orbitron text-[8px] px-2 py-0.5 rounded flex-shrink-0"
         style={{
           background: `${accent}12`,
-          border: `1px solid ${accent}30`,
-          color: accent
+          border:     `1px solid ${accent}30`,
+          color:      accent
         }}
       >
         {shortcut}

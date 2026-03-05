@@ -19,14 +19,15 @@ function makeBody(overrides) {
 
 export function loadPreset(name) {
   switch (name) {
-    case 'Binary Star':      return binaryStarPreset()
-    case 'Solar System':     return solarSystemPreset()
-    case 'Figure-8':         return figureEightPreset()
-    case 'Chaos':            return chaosPreset()
-    case 'Trojan Asteroids': return trojanAsteroidsPreset()
-    case 'Galaxy Collision': return galaxyCollisionPreset()
-    case 'Pulsar System':    return pulsarSystemPreset()
-    case 'Rogue Planet':     return roguePlanetPreset()
+    case 'Binary Star':       return binaryStarPreset()
+    case 'Solar System':      return solarSystemPreset()
+    case 'Full Solar System': return fullSolarSystemPreset()
+    case 'Figure-8':          return figureEightPreset()
+    case 'Chaos':             return chaosPreset()
+    case 'Trojan Asteroids':  return trojanAsteroidsPreset()
+    case 'Galaxy Collision':  return galaxyCollisionPreset()
+    case 'Pulsar System':     return pulsarSystemPreset()
+    case 'Rogue Planet':      return roguePlanetPreset()
     default: return []
   }
 }
@@ -57,23 +58,20 @@ function planetBody(name, mass, r, color, starMass, angleOffset = 0) {
   })
 }
 
-// ── Solar System (all 8 planets + Pluto) ─────────────────────────────────────
+// ── Solar System (compressed, all visible on screen) ─────────────────────────
 function solarSystemPreset() {
   const starMass = 10000
 
-  // Real relative distances scaled to screen units
-  // Mercury=0.387AU, Earth=1AU → Earth at r=145 → scale=145
-  // All radii = real_AU * 145
   const planets = [
-    { name: 'Mercury', mass: 0.5,   r: 56,   color: '#90a4ae' },
-    { name: 'Venus',   mass: 1.2,   r: 105,  color: '#ffcc80' },
-    { name: 'Earth',   mass: 1.5,   r: 145,  color: '#4fc3f7' },
-    { name: 'Mars',    mass: 0.8,   r: 220,  color: '#ff7043' },
-    { name: 'Jupiter', mass: 12.0,  r: 755,  color: '#ffd54f' },
-    { name: 'Saturn',  mass: 8.0,   r: 1380, color: '#ffe0b2' },
-    { name: 'Uranus',  mass: 3.0,   r: 2770, color: '#80deea' },
-    { name: 'Neptune', mass: 2.9,   r: 4340, color: '#5c6bc0' },
-    { name: 'Pluto',   mass: 0.05,  r: 5700, color: '#bcaaa4' },
+    { name: 'Mercury', mass: 0.5,  r: 56,  color: '#90a4ae' },
+    { name: 'Venus',   mass: 1.2,  r: 105, color: '#ffcc80' },
+    { name: 'Earth',   mass: 1.5,  r: 145, color: '#4fc3f7' },
+    { name: 'Mars',    mass: 0.8,  r: 200, color: '#ff7043' },
+    { name: 'Jupiter', mass: 12.0, r: 310, color: '#ffd54f' },
+    { name: 'Saturn',  mass: 8.0,  r: 430, color: '#ffe0b2' },
+    { name: 'Uranus',  mass: 3.0,  r: 560, color: '#80deea' },
+    { name: 'Neptune', mass: 2.9,  r: 680, color: '#5c6bc0' },
+    { name: 'Pluto',   mass: 0.05, r: 780, color: '#bcaaa4' },
   ]
 
   const bodies = [
@@ -87,9 +85,43 @@ function solarSystemPreset() {
     })
   ]
 
-  // Spread planets at slightly different angles so they don't start in a line
   const angles = [0, 0.8, 1.7, 2.5, 3.4, 4.2, 5.1, 5.9, 1.2]
+  planets.forEach((p, i) => {
+    bodies.push(planetBody(p.name, p.mass, p.r, p.color, starMass, angles[i]))
+  })
 
+  return bodies
+}
+
+// ── Full Solar System (real AU distances) ─────────────────────────────────────
+function fullSolarSystemPreset() {
+  const starMass = 10000
+
+  // Real AU distances: Earth = 1AU = 145 units
+  const planets = [
+    { name: 'Mercury', mass: 0.5,  r: 57,   color: '#90a4ae' },
+    { name: 'Venus',   mass: 1.2,  r: 104,  color: '#ffcc80' },
+    { name: 'Earth',   mass: 1.5,  r: 145,  color: '#4fc3f7' },
+    { name: 'Mars',    mass: 0.8,  r: 220,  color: '#ff7043' },
+    { name: 'Jupiter', mass: 12.0, r: 754,  color: '#ffd54f' },
+    { name: 'Saturn',  mass: 8.0,  r: 1389, color: '#ffe0b2' },
+    { name: 'Uranus',  mass: 3.0,  r: 2784, color: '#80deea' },
+    { name: 'Neptune', mass: 2.9,  r: 4365, color: '#5c6bc0' },
+    { name: 'Pluto',   mass: 0.05, r: 5728, color: '#bcaaa4' },
+  ]
+
+  const bodies = [
+    makeBody({
+      id:       generateId(),
+      name:     'Sol',
+      mass:     starMass,
+      position: new THREE.Vector3(0, 0, 0),
+      velocity: new THREE.Vector3(0, 0, 0),
+      color:    '#fff7c0'
+    })
+  ]
+
+  const angles = [0, 0.8, 1.7, 2.5, 3.4, 4.2, 5.1, 5.9, 1.2]
   planets.forEach((p, i) => {
     bodies.push(planetBody(p.name, p.mass, p.r, p.color, starMass, angles[i]))
   })
@@ -192,11 +224,10 @@ function chaosPreset() {
 
 // ── Trojan Asteroids ──────────────────────────────────────────────────────────
 function trojanAsteroidsPreset() {
-  const starMass     = 10000
-  const jupiterMass  = 12.0
-  const jupiterR     = 340
-  const jupiterAngle = 0
-  const jupiterV     = orbitalVelocity(starMass, jupiterR)
+  const starMass    = 10000
+  const jupiterMass = 12.0
+  const jupiterR    = 340
+  const jupiterV    = orbitalVelocity(starMass, jupiterR)
 
   const bodies = [
     makeBody({
@@ -217,22 +248,20 @@ function trojanAsteroidsPreset() {
     })
   ]
 
-  // L4 is 60° ahead of Jupiter, L5 is 60° behind
   const trojanNames = [
-    'Achilles','Patroclus','Hector','Odysseus','Ajax',
-    'Diomedes','Antilochus','Nestor','Agamemnon','Menelaus',
-    'Thetis','Briseis','Andromache','Hecuba','Priam'
+    'Achilles', 'Patroclus', 'Hector',     'Odysseus', 'Ajax',
+    'Diomedes', 'Antilochus','Nestor',      'Agamemnon','Menelaus',
+    'Thetis',   'Briseis',   'Andromache',  'Hecuba',   'Priam'
   ]
 
   let nameIdx = 0
 
   for (let cluster = 0; cluster < 2; cluster++) {
     const clusterAngle = cluster === 0
-      ? jupiterAngle + Math.PI / 3   // L4 — 60° ahead
-      : jupiterAngle - Math.PI / 3   // L5 — 60° behind
+      ? Math.PI / 3    // L4 — 60° ahead
+      : -Math.PI / 3   // L5 — 60° behind
 
     for (let i = 0; i < 7; i++) {
-      // Spread asteroids around the Lagrange point
       const spread    = 0.12
       const angle     = clusterAngle + (Math.random() - 0.5) * spread
       const radiusVar = jupiterR + (Math.random() - 0.5) * jupiterR * 0.08
@@ -263,12 +292,11 @@ function trojanAsteroidsPreset() {
 
 // ── Galaxy Collision ──────────────────────────────────────────────────────────
 function galaxyCollisionPreset() {
-  const bodies     = []
-  const core1Mass  = 8000
-  const core2Mass  = 6000
+  const bodies    = []
+  const core1Mass = 8000
+  const core2Mass = 6000
   const separation = 600
 
-  // Galaxy 1 — moving right, centered left
   const c1x = -separation / 2
   const c1y = 0
   const c1vx = 1.5
@@ -283,7 +311,6 @@ function galaxyCollisionPreset() {
     color:    '#fff7c0'
   }))
 
-  // Stars orbiting Core 1
   const stars1 = [
     { r: 60,  n: 6,  color: '#4fc3f7' },
     { r: 110, n: 9,  color: '#81c784' },
@@ -315,7 +342,6 @@ function galaxyCollisionPreset() {
     }
   })
 
-  // Galaxy 2 — moving left, centered right
   const c2x  = separation / 2
   const c2y  = 80
   const c2vx = -1.5
@@ -367,6 +393,7 @@ function galaxyCollisionPreset() {
 // ── Pulsar System ─────────────────────────────────────────────────────────────
 function pulsarSystemPreset() {
   const pulsarMass = 15000
+
   const bodies = [
     makeBody({
       id:       generateId(),
@@ -378,14 +405,13 @@ function pulsarSystemPreset() {
     })
   ]
 
-  // Tight fast-orbiting companions at varying inclinations
   const companions = [
-    { name: 'PSR-b', mass: 50,  r: 40,  color: '#4fc3f7', inclination: 0 },
-    { name: 'PSR-c', mass: 30,  r: 70,  color: '#00e5ff', inclination: 0.3 },
-    { name: 'PSR-d', mass: 80,  r: 110, color: '#7c4dff', inclination: -0.2 },
-    { name: 'PSR-e', mass: 20,  r: 160, color: '#e040fb', inclination: 0.5 },
-    { name: 'PSR-f', mass: 120, r: 220, color: '#ffffff', inclination: 0.1 },
-    { name: 'PSR-g', mass: 15,  r: 290, color: '#82b1ff', inclination: -0.4 },
+    { name: 'PSR-b', mass: 50,  r: 40,  color: '#4fc3f7', inclination:  0    },
+    { name: 'PSR-c', mass: 30,  r: 70,  color: '#00e5ff', inclination:  0.3  },
+    { name: 'PSR-d', mass: 80,  r: 110, color: '#7c4dff', inclination: -0.2  },
+    { name: 'PSR-e', mass: 20,  r: 160, color: '#e040fb', inclination:  0.5  },
+    { name: 'PSR-f', mass: 120, r: 220, color: '#ffffff', inclination:  0.1  },
+    { name: 'PSR-g', mass: 15,  r: 290, color: '#82b1ff', inclination: -0.4  },
   ]
 
   companions.forEach((c, i) => {
@@ -419,7 +445,6 @@ function pulsarSystemPreset() {
 function roguePlanetPreset() {
   const starMass = 10000
 
-  // Start with a mini solar system
   const bodies = [
     makeBody({
       id:       generateId(),
@@ -443,13 +468,10 @@ function roguePlanetPreset() {
     bodies.push(planetBody(p.name, p.mass, p.r, p.color, starMass, angles[i]))
   })
 
-  // Rogue planet enters from far left moving diagonally inward
-  // Fast enough to be hyperbolic — will disrupt orbits
-  const rogueMass = 800
   bodies.push(makeBody({
     id:       generateId(),
     name:     'Nemesis',
-    mass:     rogueMass,
+    mass:     800,
     position: new THREE.Vector3(-1200, 400, 0),
     velocity: new THREE.Vector3(6.5, -2.5, 0),
     color:    '#ff1744'

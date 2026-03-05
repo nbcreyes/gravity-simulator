@@ -1,14 +1,15 @@
 import { useSimulation } from '../store/simulation.js'
 
 const PRESETS = [
-  { name: 'Binary Star',      icon: '⭐' },
-  { name: 'Solar System',     icon: '🪐' },
-  { name: 'Figure-8',         icon: '♾️'  },
-  { name: 'Chaos',            icon: '💥' },
-  { name: 'Trojan Asteroids', icon: '🪨' },
-  { name: 'Galaxy Collision', icon: '🌌' },
-  { name: 'Pulsar System',    icon: '💫' },
-  { name: 'Rogue Planet',     icon: '🌠' },
+  { name: 'Binary Star',       icon: '⭐' },
+  { name: 'Solar System',      icon: '🪐' },
+  { name: 'Full Solar System', icon: '☀️' },
+  { name: 'Figure-8',          icon: '♾️'  },
+  { name: 'Chaos',             icon: '💥' },
+  { name: 'Trojan Asteroids',  icon: '🪨' },
+  { name: 'Galaxy Collision',  icon: '🌌' },
+  { name: 'Pulsar System',     icon: '💫' },
+  { name: 'Rogue Planet',      icon: '🌠' },
 ]
 
 const TIME_PRESETS = [0.1, 0.5, 1, 5, 20]
@@ -218,14 +219,14 @@ export default function ControlPanel({ pendingMass, setPendingMass, fps, onToggl
                 color: '#888'
               }}
               onMouseEnter={e => {
-                e.currentTarget.style.background = 'rgba(0,229,255,0.1)'
+                e.currentTarget.style.background  = 'rgba(0,229,255,0.1)'
                 e.currentTarget.style.borderColor = 'rgba(0,229,255,0.3)'
-                e.currentTarget.style.color = '#00e5ff'
+                e.currentTarget.style.color       = '#00e5ff'
               }}
               onMouseLeave={e => {
-                e.currentTarget.style.background = 'rgba(255,255,255,0.04)'
+                e.currentTarget.style.background  = 'rgba(255,255,255,0.04)'
                 e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'
-                e.currentTarget.style.color = '#888'
+                e.currentTarget.style.color       = '#888'
               }}
             >
               <span>{btn.label}</span>
@@ -320,7 +321,7 @@ export default function ControlPanel({ pendingMass, setPendingMass, fps, onToggl
           ['R',     'Fit view'],
           ['T',     'Top view'],
           ['S',     'Side view'],
-          ['1–4',   'Presets'],
+          ['1–9',   'Presets'],
           ['ESC',   'Unlock cam'],
         ].map(([key, label]) => (
           <div key={key} className="flex justify-between items-center">
@@ -349,11 +350,11 @@ export default function ControlPanel({ pendingMass, setPendingMass, fps, onToggl
         }}
         onMouseEnter={e => {
           e.currentTarget.style.background = 'rgba(255,255,255,0.07)'
-          e.currentTarget.style.color = '#888'
+          e.currentTarget.style.color      = '#888'
         }}
         onMouseLeave={e => {
           e.currentTarget.style.background = 'rgba(255,255,255,0.03)'
-          e.currentTarget.style.color = '#444'
+          e.currentTarget.style.color      = '#444'
         }}
       >
         ?  SHORTCUTS
