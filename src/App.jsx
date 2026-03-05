@@ -1,35 +1,35 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState, useEffect, useRef } from 'react'
+import SimulationCanvas from './components/SimulationCanvas.jsx'
+import ControlPanel from './components/ControlPanel.jsx'
+import BodyInspector from './components/BodyInspector.jsx'
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  const [pendingMass, setPendingMass] = useState(100)
+  const [fps, setFps] = useState(60)
+  const frameCount = useRef(0)
+  const lastTime = useRef(performance.now())
+
+  useEffect(() => {
+    let raf
+    const tick = () => {
+      frameCount.current++
+      const now = performance.now()
+      if (now - lastTime.current >= 1000) {
+        setFps(frameCount.current)
+        frameCount.current = 0
+        lastTime.current = now
+      }
+      raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [])
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <div className="relative w-screen h-screen overflow-hidden" style={{ background: '#02020f' }}>
+      <SimulationCanvas pendingMass={pendingMass} />
+      <ControlPanel pendingMass={pendingMass} setPendingMass={setPendingMass} fps={fps} />
+      <BodyInspector />
+    </div>
   )
 }
-
-export default App
