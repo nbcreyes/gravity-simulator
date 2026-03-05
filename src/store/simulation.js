@@ -8,11 +8,12 @@ export const useSimulation = create((set) => ({
   G: G_DEFAULT,
   dt: DT,
   timeScale: 1,
+  simTime: 0,
   selectedBodyId: null,
   placementMode: 'idle',
   collisionFlashes: [],
   lockedBodyId: null,
-  cameraMode: 'free', // 'free' | 'locked' | 'topdown' | 'side'
+  cameraMode: 'free',
 
   addBody: (body) => set(state => ({
     bodies: [...state.bodies, body]
@@ -30,6 +31,8 @@ export const useSimulation = create((set) => ({
     bodies: state.bodies.map(b => b.id === id ? { ...b, ...updates } : b)
   })),
 
+  incrementTime: (dt) => set(state => ({ simTime: state.simTime + dt })),
+
   togglePause: () => set(state => ({ paused: !state.paused })),
 
   clearAll: () => set({
@@ -38,7 +41,8 @@ export const useSimulation = create((set) => ({
     placementMode: 'idle',
     collisionFlashes: [],
     lockedBodyId: null,
-    cameraMode: 'free'
+    cameraMode: 'free',
+    simTime: 0
   }),
 
   loadPreset: (name) => set({
@@ -47,7 +51,8 @@ export const useSimulation = create((set) => ({
     placementMode: 'idle',
     collisionFlashes: [],
     lockedBodyId: null,
-    cameraMode: 'free'
+    cameraMode: 'free',
+    simTime: 0
   }),
 
   selectBody: (id) => set({ selectedBodyId: id }),

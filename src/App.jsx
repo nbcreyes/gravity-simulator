@@ -2,10 +2,15 @@ import { useState, useEffect, useRef } from 'react'
 import SimulationCanvas from './components/SimulationCanvas.jsx'
 import ControlPanel from './components/ControlPanel.jsx'
 import BodyInspector from './components/BodyInspector.jsx'
+import SimClock from './components/SimClock.jsx'
+import OrbitMap from './components/OrbitMap.jsx'
+import ShortcutOverlay from './components/ShortcutOverlay.jsx'
 
 export default function App() {
-  const [pendingMass, setPendingMass] = useState(100)
-  const [fps,         setFps]         = useState(60)
+  const [pendingMass,      setPendingMass]      = useState(100)
+  const [fps,              setFps]              = useState(60)
+  const [showShortcuts,    setShowShortcuts]    = useState(false)
+
   const frameCount = useRef(0)
   const lastTime   = useRef(performance.now())
 
@@ -30,13 +35,23 @@ export default function App() {
       className="relative w-screen h-screen overflow-hidden"
       style={{ background: '#02020f' }}
     >
-      <SimulationCanvas pendingMass={pendingMass} />
+      <SimulationCanvas
+        pendingMass={pendingMass}
+        onToggleShortcuts={() => setShowShortcuts(v => !v)}
+      />
+      <SimClock />
       <ControlPanel
         pendingMass={pendingMass}
         setPendingMass={setPendingMass}
         fps={fps}
+        onToggleShortcuts={() => setShowShortcuts(v => !v)}
       />
       <BodyInspector />
+      <OrbitMap />
+      <ShortcutOverlay
+        visible={showShortcuts}
+        onClose={() => setShowShortcuts(false)}
+      />
     </div>
   )
 }

@@ -9,7 +9,7 @@ const PRESETS = [
 
 const TIME_PRESETS = [0.1, 0.5, 1, 5, 20]
 
-export default function ControlPanel({ pendingMass, setPendingMass, fps }) {
+export default function ControlPanel({ pendingMass, setPendingMass, fps, onToggleShortcuts }) {
   const paused          = useSimulation(s => s.paused)
   const bodies          = useSimulation(s => s.bodies)
   const G               = useSimulation(s => s.G)
@@ -52,8 +52,10 @@ export default function ControlPanel({ pendingMass, setPendingMass, fps }) {
         <h1 className="font-orbitron text-base font-bold tracking-[0.2em] text-white">
           GRAVITAS
         </h1>
-        <p className="font-orbitron text-[9px] tracking-widest mt-0.5"
-           style={{ color: '#00e5ff88' }}>
+        <p
+          className="font-orbitron text-[9px] tracking-widest mt-0.5"
+          style={{ color: '#00e5ff88' }}
+        >
           3D GRAVITY SIMULATOR
         </p>
       </div>
@@ -69,15 +71,20 @@ export default function ControlPanel({ pendingMass, setPendingMass, fps }) {
         >
           {placement === 'placing' ? '◎  PLACING...' : '+  PLACE BODY'}
         </button>
+
         <div className="flex flex-col gap-1.5">
           <div className="flex justify-between">
             <label className="font-orbitron text-[9px] text-gray-500 tracking-widest">
               MASS
             </label>
-            <span className="font-mono text-[11px] text-white/70">{pendingMass} M</span>
+            <span className="font-mono text-[11px] text-white/70">
+              {pendingMass} M
+            </span>
           </div>
           <input
-            type="range" min={0} max={100}
+            type="range"
+            min={0}
+            max={100}
             value={massToSlider(pendingMass)}
             className="slider"
             onChange={e => setPendingMass(logMass(Number(e.target.value)))}
@@ -103,11 +110,17 @@ export default function ControlPanel({ pendingMass, setPendingMass, fps }) {
           <label className="font-orbitron text-[9px] text-gray-500 tracking-widest">
             GRAVITY  G
           </label>
-          <span className="font-mono text-[11px] text-white/70">{G.toFixed(2)}</span>
+          <span className="font-mono text-[11px] text-white/70">
+            {G.toFixed(2)}
+          </span>
         </div>
         <input
-          type="range" min={0.1} max={20} step={0.1}
-          value={G} className="slider"
+          type="range"
+          min={0.1}
+          max={20}
+          step={0.1}
+          value={G}
+          className="slider"
           onChange={e => setG(Number(e.target.value))}
         />
       </div>
@@ -118,11 +131,17 @@ export default function ControlPanel({ pendingMass, setPendingMass, fps }) {
           <label className="font-orbitron text-[9px] text-gray-500 tracking-widest">
             TIME SCALE
           </label>
-          <span className="font-mono text-[11px] text-white/70">{timeLabel}</span>
+          <span className="font-mono text-[11px] text-white/70">
+            {timeLabel}
+          </span>
         </div>
         <input
-          type="range" min={0.1} max={50} step={0.1}
-          value={timeScale} className="slider"
+          type="range"
+          min={0.1}
+          max={50}
+          step={0.1}
+          value={timeScale}
+          className="slider"
           onChange={e => setTimeScale(Number(e.target.value))}
         />
         <div className="flex gap-1 mt-0.5">
@@ -187,18 +206,29 @@ export default function ControlPanel({ pendingMass, setPendingMass, fps }) {
                 border: '1px solid rgba(255,255,255,0.07)',
                 color: '#888'
               }}
+              onMouseEnter={e => {
+                e.currentTarget.style.background = 'rgba(0,229,255,0.1)'
+                e.currentTarget.style.borderColor = 'rgba(0,229,255,0.3)'
+                e.currentTarget.style.color = '#00e5ff'
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = 'rgba(255,255,255,0.04)'
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'
+                e.currentTarget.style.color = '#888'
+              }}
             >
               <span>{btn.label}</span>
               <span style={{ color: '#444', fontSize: 7 }}>{btn.key}</span>
             </button>
           ))}
         </div>
+
         {lockedBodyId && (
           <button
             className="btn-primary mt-1"
             onClick={() => setLockedBodyId(null)}
           >
-            🔓 UNLOCK CAMERA
+            🔓  UNLOCK CAMERA
           </button>
         )}
       </div>
@@ -208,13 +238,17 @@ export default function ControlPanel({ pendingMass, setPendingMass, fps }) {
       {/* Stats */}
       <div className="flex justify-between items-end">
         <div>
-          <p className="font-orbitron text-[9px] text-gray-600 tracking-widest">BODIES</p>
+          <p className="font-orbitron text-[9px] text-gray-600 tracking-widest">
+            BODIES
+          </p>
           <p className="font-mono text-xl font-bold" style={{ color: '#00e5ff' }}>
             {bodies.length}
           </p>
         </div>
         <div className="text-right">
-          <p className="font-orbitron text-[9px] text-gray-600 tracking-widest">FPS</p>
+          <p className="font-orbitron text-[9px] text-gray-600 tracking-widest">
+            FPS
+          </p>
           <p className="font-mono text-xl font-bold" style={{ color: '#ffd54f' }}>
             {fps}
           </p>
@@ -223,7 +257,7 @@ export default function ControlPanel({ pendingMass, setPendingMass, fps }) {
 
       <div className="w-full h-px bg-white/5" />
 
-      {/* Keyboard shortcuts */}
+      {/* Keyboard shortcuts list */}
       <div className="flex flex-col gap-1">
         <label className="font-orbitron text-[9px] text-gray-500 tracking-widest mb-0.5">
           SHORTCUTS
@@ -234,20 +268,44 @@ export default function ControlPanel({ pendingMass, setPendingMass, fps }) {
           ['R',     'Fit view'],
           ['T',     'Top view'],
           ['S',     'Side view'],
-          ['1-4',   'Presets'],
+          ['1–4',   'Presets'],
           ['ESC',   'Unlock cam'],
         ].map(([key, label]) => (
           <div key={key} className="flex justify-between items-center">
             <span className="font-mono text-[9px] text-gray-600">{label}</span>
             <span
               className="font-orbitron text-[8px] px-1.5 py-0.5 rounded"
-              style={{ background: 'rgba(255,255,255,0.06)', color: '#555' }}
+              style={{
+                background: 'rgba(255,255,255,0.06)',
+                color: '#555'
+              }}
             >
               {key}
             </span>
           </div>
         ))}
       </div>
+
+      {/* Shortcut overlay toggle */}
+      <button
+        onClick={onToggleShortcuts}
+        className="w-full font-orbitron text-[9px] py-2 rounded transition-all tracking-widest"
+        style={{
+          background: 'rgba(255,255,255,0.03)',
+          border: '1px solid rgba(255,255,255,0.06)',
+          color: '#444'
+        }}
+        onMouseEnter={e => {
+          e.currentTarget.style.background = 'rgba(255,255,255,0.07)'
+          e.currentTarget.style.color = '#888'
+        }}
+        onMouseLeave={e => {
+          e.currentTarget.style.background = 'rgba(255,255,255,0.03)'
+          e.currentTarget.style.color = '#444'
+        }}
+      >
+        ?  SHORTCUTS
+      </button>
     </div>
   )
 }
