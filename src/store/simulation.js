@@ -7,14 +7,12 @@ export const useSimulation = create((set, get) => ({
   paused: false,
   G: G_DEFAULT,
   dt: DT,
+  timeScale: 1,
   selectedBodyId: null,
   placementMode: 'idle',
-  pendingBody: null,
   collisionFlashes: [],
 
-  addBody: (body) => set(state => ({
-    bodies: [...state.bodies, body]
-  })),
+  addBody: (body) => set(state => ({ bodies: [...state.bodies, body] })),
 
   removeBody: (id) => set(state => ({
     bodies: state.bodies.filter(b => b.id !== id),
@@ -33,7 +31,6 @@ export const useSimulation = create((set, get) => ({
     bodies: [],
     selectedBodyId: null,
     placementMode: 'idle',
-    pendingBody: null,
     collisionFlashes: []
   }),
 
@@ -41,17 +38,13 @@ export const useSimulation = create((set, get) => ({
     bodies: loadPreset(name),
     selectedBodyId: null,
     placementMode: 'idle',
-    pendingBody: null,
     collisionFlashes: []
   }),
 
   selectBody: (id) => set({ selectedBodyId: id }),
-
   setPlacementMode: (mode) => set({ placementMode: mode }),
-
-  setPendingBody: (body) => set({ pendingBody: body }),
-
   setG: (G) => set({ G }),
+  setTimeScale: (timeScale) => set({ timeScale }),
 
   addCollisionFlash: (flash) => set(state => ({
     collisionFlashes: [...state.collisionFlashes, flash]

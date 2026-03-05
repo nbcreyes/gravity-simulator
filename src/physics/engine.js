@@ -1,8 +1,8 @@
 import * as THREE from 'three'
 
-export const G_DEFAULT = 6.674
+export const G_DEFAULT = 1.0
 export const DT = 0.016
-export const SOFTENING = 5
+export const SOFTENING = 8
 export const MAX_TRAIL = 150
 
 export function computeAccelerations(bodies, G) {
@@ -23,17 +23,13 @@ export function computeAccelerations(bodies, G) {
 
       const forceMag = G / r_soft3
 
-      const fx = forceMag * dx
-      const fy = forceMag * dy
-      const fz = forceMag * dz
+      accels[i].x += bj.mass * forceMag * dx
+      accels[i].y += bj.mass * forceMag * dy
+      accels[i].z += bj.mass * forceMag * dz
 
-      accels[i].x += bj.mass * fx
-      accels[i].y += bj.mass * fy
-      accels[i].z += bj.mass * fz
-
-      accels[j].x -= bi.mass * fx
-      accels[j].y -= bi.mass * fy
-      accels[j].z -= bi.mass * fz
+      accels[j].x -= bi.mass * forceMag * dx
+      accels[j].y -= bi.mass * forceMag * dy
+      accels[j].z -= bi.mass * forceMag * dz
     }
   }
 
@@ -43,11 +39,8 @@ export function computeAccelerations(bodies, G) {
 export function stepSimulation(bodies, G, dt) {
   if (bodies.length === 0) return { bodies: [], collisions: [] }
 
-  // Velocity Verlet integration
-  // Step 1: store old accelerations
   const oldAccels = bodies.map(b => b.acceleration.clone())
 
-  // Step 2: update positions using current velocity and acceleration
   const moved = bodies.map((b, i) => {
     const newPos = new THREE.Vector3(
       b.position.x + b.velocity.x * dt + 0.5 * oldAccels[i].x * dt * dt,
@@ -57,36 +50,19 @@ export function stepSimulation(bodies, G, dt) {
     return { ...b, position: newPos }
   })
 
-  // Step 3: compute new accelerations at new positions
   const newAccels = computeAccelerations(moved, G)
 
-  // Step 4: update velocities using average of old and new accelerations
   const integrated = moved.map((b, i) => {
-    const avgAx = 0.5 * (oldAccels[i].x + newAccels[i].x)
-    const avgAy = 0.5 * (oldAccels[i].y + newAccels[i].y)
-    const avgAz = 0.5 * (oldAccels[i].z + newAccels[i].z)
-
     const newVel = new THREE.Vector3(
-      b.velocity.x + avgAx * dt,
-      b.velocity.y + avgAy * dt,
-      b.velocity.z + avgAz * dt
+      b.velocity.x + 0.5 * (oldAccels[i].x + newAccels[i].x) * dt,
+      b.velocity.y + 0.5 * (oldAccels[i].y + newAccels[i].y) * dt,
+      b.velocity.z + 0.5 * (oldAccels[i].z + newAccels[i].z) * dt
     )
-
-    // Update trail
-    const newTrail = [b.position.clone(), ...(b.trail || [])]
-    if (newTrail.length > MAX_TRAIL) newTrail.splice(MAX_TRAIL)
-
-    return {
-      ...b,
-      velocity: newVel,
-      acceleration: newAccels[i].clone()
-    }
+    return { ...b, velocity: newVel, acceleration: newAccels[i].clone() }
   })
 
-  // Collision detection
   const { survivors, collisions } = detectCollisions(integrated)
 
-  // Update trails after collisions resolved
   const final = survivors.map(b => {
     const newTrail = [b.position.clone(), ...(b.trail || [])]
     if (newTrail.length > MAX_TRAIL) newTrail.splice(MAX_TRAIL)
@@ -99,7 +75,6 @@ export function stepSimulation(bodies, G, dt) {
 export function detectCollisions(bodies) {
   const collisions = []
   const toRemove = new Set()
-  const mergedInto = {}
 
   for (let i = 0; i < bodies.length; i++) {
     for (let j = i + 1; j < bodies.length; j++) {
@@ -110,11 +85,9 @@ export function detectCollisions(bodies) {
 
       const ri = bodyRadius(bi.mass)
       const rj = bodyRadius(bj.mass)
-
       const dist = bi.position.distanceTo(bj.position)
 
-      if (dist < (ri + rj) * 0.8) {
-        // Merge: smaller into larger
+      if (dist < (ri + rj) * 0.6) {
         const [survivor, victim] = bi.mass >= bj.mass ? [i, j] : [j, i]
         toRemove.add(victim)
 
@@ -125,12 +98,7 @@ export function detectCollisions(bodies) {
           (bodies[survivor].velocity.z * bodies[survivor].mass + bodies[victim].velocity.z * bodies[victim].mass) / totalMass
         )
 
-        bodies[survivor] = {
-          ...bodies[survivor],
-          mass: totalMass,
-          velocity: newVel
-        }
-
+        bodies[survivor] = { ...bodies[survivor], mass: totalMass, velocity: newVel }
         collisions.push({
           position: bodies[survivor].position.clone(),
           id: `collision-${Date.now()}-${Math.random()}`
@@ -139,8 +107,10 @@ export function detectCollisions(bodies) {
     }
   }
 
-  const survivors = bodies.filter((_, i) => !toRemove.has(i))
-  return { survivors, collisions }
+  return {
+    survivors: bodies.filter((_, i) => !toRemove.has(i)),
+    collisions
+  }
 }
 
 export function bodyRadius(mass) {
@@ -148,9 +118,10 @@ export function bodyRadius(mass) {
 }
 
 export function bodyColor(mass) {
-  if (mass < 50) return '#4fc3f7'
-  if (mass < 200) return '#ffd54f'
-  if (mass < 500) return '#ff7043'
+  if (mass < 1)    return '#4fc3f7'
+  if (mass < 50)   return '#81c784'
+  if (mass < 200)  return '#ffd54f'
+  if (mass < 500)  return '#ff7043'
   return '#ffffff'
 }
 

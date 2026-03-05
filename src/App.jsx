@@ -7,7 +7,7 @@ export default function App() {
   const [pendingMass, setPendingMass] = useState(100)
   const [fps, setFps] = useState(60)
   const frameCount = useRef(0)
-  const lastTime = useRef(performance.now())
+  const lastTime   = useRef(performance.now())
 
   useEffect(() => {
     let raf
@@ -17,7 +17,7 @@ export default function App() {
       if (now - lastTime.current >= 1000) {
         setFps(frameCount.current)
         frameCount.current = 0
-        lastTime.current = now
+        lastTime.current   = now
       }
       raf = requestAnimationFrame(tick)
     }
@@ -26,9 +26,16 @@ export default function App() {
   }, [])
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden" style={{ background: '#02020f' }}>
+    <div
+      className="relative w-screen h-screen overflow-hidden"
+      style={{ background: '#02020f' }}
+    >
       <SimulationCanvas pendingMass={pendingMass} />
-      <ControlPanel pendingMass={pendingMass} setPendingMass={setPendingMass} fps={fps} />
+      <ControlPanel
+        pendingMass={pendingMass}
+        setPendingMass={setPendingMass}
+        fps={fps}
+      />
       <BodyInspector />
     </div>
   )

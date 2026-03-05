@@ -18,7 +18,10 @@ function FlashSphere({ flash }) {
   })
 
   return (
-    <mesh ref={meshRef} position={[flash.position.x, flash.position.y, flash.position.z]}>
+    <mesh
+      ref={meshRef}
+      position={[flash.position.x, flash.position.y, flash.position.z]}
+    >
       <sphereGeometry args={[8, 16, 16]} />
       <meshStandardMaterial
         color="#ffffff"
