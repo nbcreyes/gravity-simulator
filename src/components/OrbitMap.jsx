@@ -2,8 +2,8 @@ import { useRef, useEffect } from 'react'
 import { useSimulation } from '../store/simulation.js'
 import { bodyRadius } from '../physics/engine.js'
 
-const MAP_SIZE    = 160
-const PADDING     = 12
+const MAP_SIZE = 160
+const PADDING  = 12
 
 export default function OrbitMap() {
   const canvasRef  = useRef()
@@ -18,25 +18,20 @@ export default function OrbitMap() {
     const W   = MAP_SIZE
     const H   = MAP_SIZE
 
-    // Clear
     ctx.clearRect(0, 0, W, H)
 
-    // Find bounds
-    const xs = bodies.map(b => b.position.x)
-    const ys = bodies.map(b => b.position.y)
-    const minX = Math.min(...xs)
-    const maxX = Math.max(...xs)
-    const minY = Math.min(...ys)
-    const maxY = Math.max(...ys)
+    const xs    = bodies.map(b => b.position.x)
+    const ys    = bodies.map(b => b.position.y)
+    const minX  = Math.min(...xs)
+    const maxX  = Math.max(...xs)
+    const minY  = Math.min(...ys)
+    const maxY  = Math.max(...ys)
+    const range = Math.max(maxX - minX, maxY - minY, 1)
+    const scale = (W - PADDING * 2) / range
+    const cx    = W / 2 - ((minX + maxX) / 2) * scale
+    const cy    = H / 2 - ((minY + maxY) / 2) * scale
 
-    const rangeX = Math.max(maxX - minX, 1)
-    const rangeY = Math.max(maxY - minY, 1)
-    const range  = Math.max(rangeX, rangeY)
-    const scale  = (W - PADDING * 2) / range
-    const cx     = W / 2 - ((minX + maxX) / 2) * scale
-    const cy     = H / 2 - ((minY + maxY) / 2) * scale
-
-    // Draw trails
+    // Trails
     for (const body of bodies) {
       const trail = body.trail || []
       if (trail.length < 2) continue
@@ -51,7 +46,7 @@ export default function OrbitMap() {
       ctx.stroke()
     }
 
-    // Draw bodies
+    // Bodies
     for (const body of bodies) {
       const bx = body.position.x * scale + cx
       const by = body.position.y * scale + cy
@@ -66,7 +61,7 @@ export default function OrbitMap() {
       ctx.arc(bx, by, r * 3, 0, Math.PI * 2)
       ctx.fill()
 
-      // Body dot
+      // Dot
       ctx.beginPath()
       ctx.fillStyle = body.color
       ctx.arc(bx, by, r, 0, Math.PI * 2)
@@ -125,8 +120,10 @@ export default function OrbitMap() {
         padding: 8
       }}
     >
-      <p className="font-orbitron text-[8px] tracking-widest mb-1.5"
-         style={{ color: '#00e5ff55', textAlign: 'center' }}>
+      <p
+        className="font-orbitron text-[8px] tracking-widest mb-1.5"
+        style={{ color: '#00e5ff55', textAlign: 'center' }}
+      >
         ORBIT MAP
       </p>
       <canvas

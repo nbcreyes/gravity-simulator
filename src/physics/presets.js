@@ -58,7 +58,29 @@ function planetBody(name, mass, r, color, starMass, angleOffset = 0) {
   })
 }
 
-// ── Solar System (compressed, all visible on screen) ─────────────────────────
+function moonBody(name, mass, r, color, parentBody) {
+  const v   = orbitalVelocity(parentBody.mass, r)
+  const ang = Math.random() * Math.PI * 2
+  return makeBody({
+    id:       generateId(),
+    name,
+    mass,
+    position: new THREE.Vector3(
+      parentBody.position.x + r * Math.cos(ang),
+      parentBody.position.y + r * Math.sin(ang),
+      0
+    ),
+    velocity: new THREE.Vector3(
+      parentBody.velocity.x - v * Math.sin(ang),
+      parentBody.velocity.y + v * Math.cos(ang),
+      0
+    ),
+    color,
+    isMoon: true
+  })
+}
+
+// ── Solar System (compressed, all visible) ────────────────────────────────────
 function solarSystemPreset() {
   const starMass = 10000
 
@@ -90,6 +112,20 @@ function solarSystemPreset() {
     bodies.push(planetBody(p.name, p.mass, p.r, p.color, starMass, angles[i]))
   })
 
+  // Moons
+  const earth   = bodies.find(b => b.name === 'Earth')
+  const mars    = bodies.find(b => b.name === 'Mars')
+  const jupiter = bodies.find(b => b.name === 'Jupiter')
+  const saturn  = bodies.find(b => b.name === 'Saturn')
+
+  if (earth)   bodies.push(moonBody('Moon',     0.1,  8,  '#cccccc', earth))
+  if (mars)    bodies.push(moonBody('Phobos',   0.01, 5,  '#aa8866', mars))
+  if (mars)    bodies.push(moonBody('Deimos',   0.01, 8,  '#998877', mars))
+  if (jupiter) bodies.push(moonBody('Io',       0.3,  18, '#ffcc44', jupiter))
+  if (jupiter) bodies.push(moonBody('Europa',   0.2,  25, '#aaddff', jupiter))
+  if (jupiter) bodies.push(moonBody('Ganymede', 0.4,  34, '#bbaa99', jupiter))
+  if (saturn)  bodies.push(moonBody('Titan',    0.3,  22, '#ffaa44', saturn))
+
   return bodies
 }
 
@@ -97,7 +133,6 @@ function solarSystemPreset() {
 function fullSolarSystemPreset() {
   const starMass = 10000
 
-  // Real AU distances: Earth = 1AU = 145 units
   const planets = [
     { name: 'Mercury', mass: 0.5,  r: 57,   color: '#90a4ae' },
     { name: 'Venus',   mass: 1.2,  r: 104,  color: '#ffcc80' },
@@ -125,6 +160,20 @@ function fullSolarSystemPreset() {
   planets.forEach((p, i) => {
     bodies.push(planetBody(p.name, p.mass, p.r, p.color, starMass, angles[i]))
   })
+
+  // Moons
+  const earth   = bodies.find(b => b.name === 'Earth')
+  const mars    = bodies.find(b => b.name === 'Mars')
+  const jupiter = bodies.find(b => b.name === 'Jupiter')
+  const saturn  = bodies.find(b => b.name === 'Saturn')
+
+  if (earth)   bodies.push(moonBody('Moon',     0.1,  8,   '#cccccc', earth))
+  if (mars)    bodies.push(moonBody('Phobos',   0.01, 5,   '#aa8866', mars))
+  if (mars)    bodies.push(moonBody('Deimos',   0.01, 8,   '#998877', mars))
+  if (jupiter) bodies.push(moonBody('Io',       0.3,  18,  '#ffcc44', jupiter))
+  if (jupiter) bodies.push(moonBody('Europa',   0.2,  25,  '#aaddff', jupiter))
+  if (jupiter) bodies.push(moonBody('Ganymede', 0.4,  34,  '#bbaa99', jupiter))
+  if (saturn)  bodies.push(moonBody('Titan',    0.3,  22,  '#ffaa44', saturn))
 
   return bodies
 }
@@ -249,17 +298,17 @@ function trojanAsteroidsPreset() {
   ]
 
   const trojanNames = [
-    'Achilles', 'Patroclus', 'Hector',     'Odysseus', 'Ajax',
-    'Diomedes', 'Antilochus','Nestor',      'Agamemnon','Menelaus',
-    'Thetis',   'Briseis',   'Andromache',  'Hecuba',   'Priam'
+    'Achilles', 'Patroclus', 'Hector',    'Odysseus', 'Ajax',
+    'Diomedes', 'Antilochus','Nestor',     'Agamemnon','Menelaus',
+    'Thetis',   'Briseis',   'Andromache', 'Hecuba',   'Priam'
   ]
 
   let nameIdx = 0
 
   for (let cluster = 0; cluster < 2; cluster++) {
     const clusterAngle = cluster === 0
-      ? Math.PI / 3    // L4 — 60° ahead
-      : -Math.PI / 3   // L5 — 60° behind
+      ? Math.PI / 3
+      : -Math.PI / 3
 
     for (let i = 0; i < 7; i++) {
       const spread    = 0.12
@@ -292,13 +341,13 @@ function trojanAsteroidsPreset() {
 
 // ── Galaxy Collision ──────────────────────────────────────────────────────────
 function galaxyCollisionPreset() {
-  const bodies    = []
-  const core1Mass = 8000
-  const core2Mass = 6000
+  const bodies     = []
+  const core1Mass  = 8000
+  const core2Mass  = 6000
   const separation = 600
 
-  const c1x = -separation / 2
-  const c1y = 0
+  const c1x  = -separation / 2
+  const c1y  = 0
   const c1vx = 1.5
   const c1vy = 0
 

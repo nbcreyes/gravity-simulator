@@ -1,27 +1,42 @@
-import { useSimulation } from '../store/simulation.js'
-import { computeKineticEnergy, computePotentialEnergy, computeTotalEnergy } from '../physics/analysis.js'
 import { useRef } from 'react'
+import { useSimulation } from '../store/simulation.js'
+import { computeKineticEnergy, computePotentialEnergy } from '../physics/analysis.js'
+
+function ERow({ label, value, color }) {
+  return (
+    <div className="flex justify-between items-baseline">
+      <span className="font-orbitron text-[9px] text-gray-500 tracking-widest">
+        {label}
+      </span>
+      <span className="font-mono text-xs" style={{ color }}>
+        {value}
+      </span>
+    </div>
+  )
+}
 
 export default function EnergyDisplay() {
-  const bodies      = useSimulation(s => s.bodies)
-  const G           = useSimulation(s => s.G)
-  const showEnergy  = useSimulation(s => s.showEnergy)
-  const initialRef  = useRef(null)
+  const bodies     = useSimulation(s => s.showEnergy)
+  const showEnergy = useSimulation(s => s.showEnergy)
+  const allBodies  = useSimulation(s => s.bodies)
+  const G          = useSimulation(s => s.G)
+  const initialRef = useRef(null)
 
-  if (!showEnergy || bodies.length < 2) return null
+  if (!showEnergy || allBodies.length < 2) return null
 
-  const ke    = computeKineticEnergy(bodies)
-  const pe    = computePotentialEnergy(bodies, G)
+  const ke    = computeKineticEnergy(allBodies)
+  const pe    = computePotentialEnergy(allBodies, G)
   const total = ke + pe
 
   if (initialRef.current === null) initialRef.current = total
+
   const drift = initialRef.current !== 0
     ? ((total - initialRef.current) / Math.abs(initialRef.current) * 100).toFixed(4)
     : '0.0000'
 
   const fmt = (n) => {
-    if (Math.abs(n) > 1e6)  return (n / 1e6).toFixed(2) + 'M'
-    if (Math.abs(n) > 1e3)  return (n / 1e3).toFixed(2) + 'K'
+    if (Math.abs(n) > 1e6) return (n / 1e6).toFixed(2) + 'M'
+    if (Math.abs(n) > 1e3) return (n / 1e3).toFixed(2) + 'K'
     return n.toFixed(2)
   }
 
@@ -34,8 +49,11 @@ export default function EnergyDisplay() {
 
   return (
     <div
-      className="fixed bottom-4 left-4 z-20 p-4 flex flex-col gap-2"
+      className="fixed z-20 p-4 flex flex-col gap-2"
       style={{
+        top: '50%',
+        right: '290px',
+        transform: 'translateY(-50%)',
         background: 'rgba(6,6,18,0.82)',
         backdropFilter: 'blur(24px)',
         border: '1px solid rgba(255,255,255,0.07)',
@@ -43,8 +61,10 @@ export default function EnergyDisplay() {
         minWidth: 200
       }}
     >
-      <p className="font-orbitron text-[9px] tracking-widest"
-         style={{ color: '#00e5ff88' }}>
+      <p
+        className="font-orbitron text-[9px] tracking-widest"
+        style={{ color: '#00e5ff88' }}
+      >
         ENERGY CONSERVATION
       </p>
 
@@ -52,7 +72,7 @@ export default function EnergyDisplay() {
 
       <ERow label="KINETIC"   value={fmt(ke)}    color="#4fc3f7" />
       <ERow label="POTENTIAL" value={fmt(pe)}    color="#ffd54f" />
-      <ERow label="TOTAL"     value={fmt(total)} color="#fff" />
+      <ERow label="TOTAL"     value={fmt(total)} color="#fff"    />
 
       <div className="w-full h-px bg-white/5" />
 
@@ -68,7 +88,6 @@ export default function EnergyDisplay() {
         </span>
       </div>
 
-      {/* Energy bar */}
       <div
         className="w-full rounded-full overflow-hidden"
         style={{ height: 3, background: 'rgba(255,255,255,0.06)' }}
@@ -83,19 +102,6 @@ export default function EnergyDisplay() {
           }}
         />
       </div>
-    </div>
-  )
-}
-
-function ERow({ label, value, color }) {
-  return (
-    <div className="flex justify-between items-baseline">
-      <span className="font-orbitron text-[9px] text-gray-500 tracking-widest">
-        {label}
-      </span>
-      <span className="font-mono text-xs" style={{ color }}>
-        {value}
-      </span>
     </div>
   )
 }

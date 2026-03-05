@@ -6,8 +6,9 @@ import { useSimulation } from '../store/simulation.js'
 import { stepSimulation, bodyRadius, bodyColor } from '../physics/engine.js'
 import { computeLagrangePoints, computeCenterOfMass } from '../physics/analysis.js'
 import CollisionFlashes from './CollisionFlash.jsx'
-import Nebula from './Nebula.jsx'
-import ContextMenu from './ContextMenu.jsx'
+import Nebula           from './Nebula.jsx'
+import ContextMenu      from './ContextMenu.jsx'
+import AsteroidBelt     from './AsteroidBelt.jsx'
 
 // ── Starfield ─────────────────────────────────────────────────────────────────
 function Starfield() {
@@ -70,10 +71,10 @@ function SaturnRings({ radius }) {
 // ── Planet Texture ────────────────────────────────────────────────────────────
 function usePlanetTexture(name, color) {
   return useMemo(() => {
-    const size = 256
+    const size   = 256
     const canvas = document.createElement('canvas')
     canvas.width = canvas.height = size
-    const ctx = canvas.getContext('2d')
+    const ctx    = canvas.getContext('2d')
 
     ctx.fillStyle = color
     ctx.fillRect(0, 0, size, size)
@@ -87,9 +88,9 @@ function usePlanetTexture(name, color) {
       }
     } else if (name === 'Earth') {
       ctx.fillStyle = 'rgba(34,139,34,0.5)'
-      ctx.beginPath(); ctx.ellipse(80,  100, 30, 50, 0.4,  0, Math.PI*2); ctx.fill()
+      ctx.beginPath(); ctx.ellipse(80,  100, 30, 50,  0.4, 0, Math.PI*2); ctx.fill()
       ctx.beginPath(); ctx.ellipse(160, 80,  40, 35, -0.3, 0, Math.PI*2); ctx.fill()
-      ctx.beginPath(); ctx.ellipse(200, 150, 25, 40, 0.8,  0, Math.PI*2); ctx.fill()
+      ctx.beginPath(); ctx.ellipse(200, 150, 25, 40,  0.8, 0, Math.PI*2); ctx.fill()
       ctx.fillStyle = 'rgba(255,255,255,0.5)'
       ctx.fillRect(0, 0, size, 20)
       ctx.fillRect(0, size - 20, size, 20)
@@ -126,23 +127,51 @@ function usePlanetTexture(name, color) {
 
 // ── Trail ─────────────────────────────────────────────────────────────────────
 function Trail({ body }) {
-  const trail = body.trail || []
-  if (trail.length < 2) return null
+  const lineRef = useRef(null)
+  const geoRef  = useRef(null)
+  const MAX_PTS = 60
 
-  const color = body.color || bodyColor(body.mass)
+  useEffect(() => {
+    const geometry  = new THREE.BufferGeometry()
+    const positions = new Float32Array(MAX_PTS * 3)
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+    geometry.setDrawRange(0, 0)
 
-  const obj = useMemo(() => {
-    const points   = trail.map(p => new THREE.Vector3(p.x, p.y, p.z))
-    const geometry = new THREE.BufferGeometry().setFromPoints(points)
     const material = new THREE.LineBasicMaterial({
-      color: new THREE.Color(color),
+      color:       new THREE.Color(body.color || '#ffffff'),
       transparent: true,
-      opacity: 0.45
+      opacity:     0.45
     })
-    return new THREE.Line(geometry, material)
-  }, [trail, color])
 
-  return <primitive object={obj} />
+    const line      = new THREE.Line(geometry, material)
+    geoRef.current  = geometry
+    lineRef.current = line
+
+    return () => {
+      geometry.dispose()
+      material.dispose()
+    }
+  }, [body.id, body.color])
+
+  useFrame(() => {
+    const trail = body.trail || []
+    if (!geoRef.current || trail.length < 2) return
+
+    const attr  = geoRef.current.attributes.position
+    const count = Math.min(trail.length, MAX_PTS)
+
+    for (let i = 0; i < count; i++) {
+      attr.array[i * 3]     = trail[i].x
+      attr.array[i * 3 + 1] = trail[i].y
+      attr.array[i * 3 + 2] = trail[i].z
+    }
+
+    attr.needsUpdate = true
+    geoRef.current.setDrawRange(0, count)
+  })
+
+  if (!lineRef.current) return null
+  return <primitive object={lineRef.current} />
 }
 
 // ── Velocity Arrow ────────────────────────────────────────────────────────────
@@ -154,9 +183,9 @@ function VelocityArrow({ start, end }) {
     ]
     const geometry = new THREE.BufferGeometry().setFromPoints(points)
     const material = new THREE.LineBasicMaterial({
-      color: new THREE.Color('#00e5ff'),
+      color:       new THREE.Color('#00e5ff'),
       transparent: true,
-      opacity: 0.9
+      opacity:     0.9
     })
     return new THREE.Line(geometry, material)
   }, [start, end])
@@ -174,6 +203,9 @@ function Body({ body, isSelected, onSelect, onContextMenu }) {
   const isSaturn = body.name === 'Saturn'
   const texture  = usePlanetTexture(body.name, color)
 
+  // Reduce geometry detail for small/moon bodies
+  const segments = body.mass > 1000 ? 48 : body.mass > 10 ? 24 : 12
+
   useFrame(({ clock }) => {
     if (meshRef.current)
       meshRef.current.rotation.y = clock.elapsedTime * (isStar ? 0.05 : 0.2)
@@ -183,19 +215,37 @@ function Body({ body, isSelected, onSelect, onContextMenu }) {
 
   return (
     <group position={[body.position.x, body.position.y, body.position.z]}>
-      {/* Atmosphere */}
-      <mesh>
-        <sphereGeometry args={[radius * 1.9, 16, 16]} />
-        <meshStandardMaterial
-          color={color}
-          emissive={color}
-          emissiveIntensity={isStar ? 0.6 : 0.25}
-          transparent
-          opacity={isStar ? 0.4 : 0.18}
-          side={THREE.BackSide}
-          depthWrite={false}
-        />
-      </mesh>
+      {/* Planet atmosphere */}
+      {!isStar && (
+        <mesh>
+          <sphereGeometry args={[radius * 1.4, 8, 8]} />
+          <meshStandardMaterial
+            color={color}
+            emissive={color}
+            emissiveIntensity={0.25}
+            transparent
+            opacity={0.12}
+            side={THREE.BackSide}
+            depthWrite={false}
+          />
+        </mesh>
+      )}
+
+      {/* Star corona */}
+      {isStar && (
+        <mesh>
+          <sphereGeometry args={[radius * 1.3, 16, 16]} />
+          <meshStandardMaterial
+            color={color}
+            emissive={color}
+            emissiveIntensity={0.8}
+            transparent
+            opacity={0.25}
+            side={THREE.BackSide}
+            depthWrite={false}
+          />
+        </mesh>
+      )}
 
       {/* Main body */}
       <mesh
@@ -207,7 +257,7 @@ function Body({ body, isSelected, onSelect, onContextMenu }) {
             onContextMenu(body, e.nativeEvent.clientX, e.nativeEvent.clientY)
         }}
       >
-        <sphereGeometry args={[radius, 48, 48]} />
+        <sphereGeometry args={[radius, segments, segments]} />
         <meshStandardMaterial
           map={isStar ? null : texture}
           color={isStar ? color : '#ffffff'}
@@ -218,15 +268,15 @@ function Body({ body, isSelected, onSelect, onContextMenu }) {
         />
       </mesh>
 
-      {/* Star corona */}
+      {/* Star sparkles */}
       {isStar && (
         <Sparkles
-          count={40}
+          count={30}
           scale={radius * 4}
           size={3}
           speed={0.3}
           color={color}
-          opacity={0.6}
+          opacity={0.5}
         />
       )}
 
@@ -243,23 +293,25 @@ function Body({ body, isSelected, onSelect, onContextMenu }) {
         decay={2}
       />
 
-      {/* Label */}
-      <Text
-        position={[0, radius + 6, 0]}
-        fontSize={4}
-        color={color}
-        anchorX="center"
-        anchorY="bottom"
-        renderOrder={999}
-        material-depthTest={false}
-      >
-        {body.name}
-      </Text>
+      {/* Label — skip for very small moon bodies */}
+      {body.mass > 0.1 && (
+        <Text
+          position={[0, radius + 6, 0]}
+          fontSize={4}
+          color={color}
+          anchorX="center"
+          anchorY="bottom"
+          renderOrder={999}
+          material-depthTest={false}
+        >
+          {body.name}
+        </Text>
+      )}
 
       {/* Selection ring */}
       {isSelected && (
         <mesh ref={ringRef} rotation={[Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[radius * 1.9, radius * 2.1, 64]} />
+          <ringGeometry args={[radius * 1.15, radius * 1.3, 64]} />
           <meshBasicMaterial
             color="#00e5ff"
             transparent
@@ -460,40 +512,22 @@ function KeyboardShortcuts({ onToggleShortcuts }) {
     const onKey = (e) => {
       if (e.target.tagName === 'INPUT') return
       switch (e.code) {
-        case 'Space':
-          e.preventDefault()
-          togglePause()
-          break
-        case 'KeyC':
-          clearAll()
-          break
-        case 'KeyR':
-          setCameraMode('zoomfit')
-          break
-        case 'KeyT':
-          setCameraMode('topdown')
-          break
-        case 'KeyS':
-          setCameraMode('side')
-          break
-        case 'Escape':
-          setLockedBodyId(null)
-          break
-        case 'Digit1':
-          loadPreset('Binary Star')
-          break
-        case 'Digit2':
-          loadPreset('Solar System')
-          break
-        case 'Digit3':
-          loadPreset('Figure-8')
-          break
-        case 'Digit4':
-          loadPreset('Chaos')
-          break
-        case 'Slash':
-          if (e.shiftKey) onToggleShortcuts()
-          break
+        case 'Space':  e.preventDefault(); togglePause();              break
+        case 'KeyC':   clearAll();                                      break
+        case 'KeyR':   setCameraMode('zoomfit');                        break
+        case 'KeyT':   setCameraMode('topdown');                        break
+        case 'KeyS':   setCameraMode('side');                           break
+        case 'Escape': setLockedBodyId(null);                           break
+        case 'Digit1': loadPreset('Binary Star');                       break
+        case 'Digit2': loadPreset('Solar System');                      break
+        case 'Digit3': loadPreset('Full Solar System');                 break
+        case 'Digit4': loadPreset('Figure-8');                          break
+        case 'Digit5': loadPreset('Chaos');                             break
+        case 'Digit6': loadPreset('Trojan Asteroids');                  break
+        case 'Digit7': loadPreset('Galaxy Collision');                  break
+        case 'Digit8': loadPreset('Pulsar System');                     break
+        case 'Digit9': loadPreset('Rogue Planet');                      break
+        case 'Slash':  if (e.shiftKey) onToggleShortcuts();             break
       }
     }
     window.addEventListener('keydown', onKey)
@@ -521,7 +555,8 @@ function PhysicsLoop() {
     const { bodies, paused, G, timeScale } = refs.current
     if (paused || bodies.length === 0) return
 
-    const steps    = Math.max(1, Math.round(timeScale))
+    // Cap substeps at 4 to protect FPS
+    const steps    = Math.min(Math.max(1, Math.round(timeScale)), 4)
     const scaledDt = dt * timeScale / steps
 
     let current = bodies
@@ -541,7 +576,7 @@ function PhysicsLoop() {
 
 // ── Placement Ghost ───────────────────────────────────────────────────────────
 function PlacementGhost({ pendingMass }) {
-  const { camera }  = useThree()
+  const { camera } = useThree()
   const [ghostPos, setGhostPos] = useState(new THREE.Vector3())
   const [phase,    setPhase]    = useState('positioning')
   const [startPos, setStartPos] = useState(null)
@@ -590,18 +625,18 @@ function PlacementGhost({ pendingMass }) {
         const end = getWorldPos(e)
         if (!end) return
         addBody({
-          id: `body-${Date.now()}`,
-          name: 'Body',
-          mass: pendingMass,
-          position: startPos.clone(),
-          velocity: new THREE.Vector3(
+          id:           `body-${Date.now()}`,
+          name:         'Body',
+          mass:         pendingMass,
+          position:     startPos.clone(),
+          velocity:     new THREE.Vector3(
             (end.x - startPos.x) * 0.05,
             (end.y - startPos.y) * 0.05,
             0
           ),
           acceleration: new THREE.Vector3(0, 0, 0),
-          trail: [],
-          color: bodyColor(pendingMass)
+          trail:        [],
+          color:        bodyColor(pendingMass)
         })
         setMode('idle')
       }
@@ -659,6 +694,7 @@ function Scene({ pendingMass, onToggleShortcuts, onContextMenu }) {
       <CollisionFlashes />
       <CenterOfMass />
       <LagrangePoints />
+      <AsteroidBelt />
 
       {bodies.map(body => (
         <Trail key={`trail-${body.id}`} body={body} />
@@ -695,9 +731,10 @@ export default function SimulationCanvas({ pendingMass, onToggleShortcuts }) {
       <Canvas
         camera={{ fov: 60, position: [0, 0, 600], near: 0.1, far: 20000 }}
         gl={{
-          antialias: true,
-          toneMapping: THREE.ACESFilmicToneMapping,
-          toneMappingExposure: 1.2
+          antialias:             true,
+          toneMapping:           THREE.ACESFilmicToneMapping,
+          toneMappingExposure:   1.2,
+          preserveDrawingBuffer: true
         }}
         style={{ background: '#02020f' }}
         onContextMenu={e => e.preventDefault()}

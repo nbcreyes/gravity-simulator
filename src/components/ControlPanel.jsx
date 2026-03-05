@@ -14,7 +14,7 @@ const PRESETS = [
 
 const TIME_PRESETS = [0.1, 0.5, 1, 5, 20]
 
-export default function ControlPanel({ pendingMass, setPendingMass, fps, onToggleShortcuts }) {
+export default function ControlPanel({ pendingMass, setPendingMass, fps, onToggleShortcuts, audioEnabled, onToggleAudio }) {
   const paused                = useSimulation(s => s.paused)
   const bodies                = useSimulation(s => s.bodies)
   const G                     = useSimulation(s => s.G)
@@ -358,6 +358,23 @@ export default function ControlPanel({ pendingMass, setPendingMass, fps, onToggl
         }}
       >
         ?  SHORTCUTS
+      </button>
+
+      {/* Audio toggle */}
+      <button
+        onClick={onToggleAudio}
+        className="w-full font-orbitron text-[9px] py-2 rounded transition-all tracking-widest"
+        style={{
+          background: audioEnabled
+            ? 'rgba(0,229,255,0.1)'
+            : 'rgba(255,255,255,0.03)',
+          border: `1px solid ${audioEnabled
+            ? 'rgba(0,229,255,0.35)'
+            : 'rgba(255,255,255,0.06)'}`,
+          color: audioEnabled ? '#00e5ff' : '#444'
+        }}
+      >
+        {audioEnabled ? '🔊  AUDIO ON' : '🔇  AUDIO OFF'}
       </button>
     </div>
   )
