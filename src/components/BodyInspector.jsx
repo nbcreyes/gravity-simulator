@@ -1,5 +1,4 @@
 import { useSimulation } from '../store/simulation.js'
-import { bodyRadius } from '../physics/engine.js'
 
 function StatRow({ label, value, unit }) {
   return (
@@ -15,13 +14,13 @@ function StatRow({ label, value, unit }) {
 }
 
 export default function BodyInspector() {
-  const bodies       = useSimulation(s => s.bodies)
-  const selectedId   = useSimulation(s => s.selectedBodyId)
-  const selectBody   = useSimulation(s => s.selectBody)
-  const updateBody   = useSimulation(s => s.updateBody)
-  const removeBody   = useSimulation(s => s.removeBody)
+  const bodies     = useSimulation(s => s.bodies)
+  const selectedId = useSimulation(s => s.selectedBodyId)
+  const selectBody = useSimulation(s => s.selectBody)
+  const updateBody = useSimulation(s => s.updateBody)
+  const removeBody = useSimulation(s => s.removeBody)
 
-  const body = bodies.find(b => b.id === selectedId)
+  const body   = bodies.find(b => b.id === selectedId)
   const isOpen = !!body
 
   const speed = body
@@ -33,18 +32,18 @@ export default function BodyInspector() {
     : 0
 
   const ke = body
-    ? (0.5 * body.mass * speed * speed).toFixed(2)
+    ? (0.5 * body.mass * Number(speed) ** 2).toFixed(2)
     : 0
 
   return (
     <div
-      className={`inspector-panel fixed right-0 top-0 h-full w-72 z-20 p-5 flex flex-col gap-4`}
+      className="fixed right-0 top-0 h-full w-72 z-20 p-5 flex flex-col gap-4"
       style={{
-        background: 'rgba(6, 6, 18, 0.85)',
+        background: 'rgba(6,6,18,0.85)',
         backdropFilter: 'blur(24px)',
         borderLeft: '1px solid rgba(255,255,255,0.07)',
         transform: isOpen ? 'translateX(0%)' : 'translateX(100%)',
-        transition: 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)'
+        transition: 'transform 0.35s cubic-bezier(0.16,1,0.3,1)'
       }}
     >
       {body && (
@@ -73,12 +72,12 @@ export default function BodyInspector() {
           <div className="w-full h-px bg-white/5" />
 
           <div className="flex flex-col gap-3">
-            <StatRow label="MASS"     value={body.mass.toFixed(2)}          unit="M"   />
-            <StatRow label="SPEED"    value={speed}                          unit="u/s" />
-            <StatRow label="KE"       value={ke}                             unit="J"   />
-            <StatRow label="X"        value={body.position.x.toFixed(1)}    unit="u"   />
-            <StatRow label="Y"        value={body.position.y.toFixed(1)}    unit="u"   />
-            <StatRow label="Z"        value={body.position.z.toFixed(1)}    unit="u"   />
+            <StatRow label="MASS"  value={body.mass.toFixed(2)}       unit="M"   />
+            <StatRow label="SPEED" value={speed}                       unit="u/s" />
+            <StatRow label="KE"    value={ke}                          unit="J"   />
+            <StatRow label="X"     value={body.position.x.toFixed(1)} unit="u"   />
+            <StatRow label="Y"     value={body.position.y.toFixed(1)} unit="u"   />
+            <StatRow label="Z"     value={body.position.z.toFixed(1)} unit="u"   />
           </div>
 
           <div className="w-full h-px bg-white/5" />

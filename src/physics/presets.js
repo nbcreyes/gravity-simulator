@@ -19,10 +19,10 @@ function makeBody(overrides) {
 
 export function loadPreset(name) {
   switch (name) {
-    case 'Binary Star': return binaryStarPreset()
+    case 'Binary Star':  return binaryStarPreset()
     case 'Solar System': return solarSystemPreset()
-    case 'Figure-8':    return figureEightPreset()
-    case 'Chaos':       return chaosPreset()
+    case 'Figure-8':     return figureEightPreset()
+    case 'Chaos':        return chaosPreset()
     default: return []
   }
 }
@@ -70,10 +70,8 @@ function binaryStarPreset() {
   const m2 = 4000
   const M  = m1 + m2
   const a  = 200
-
   const r1 = a * m2 / M
   const r2 = a * m1 / M
-
   const v_rel = Math.sqrt(G * M / a)
   const v1 = v_rel * m2 / M
   const v2 = v_rel * m1 / M
@@ -101,15 +99,10 @@ function binaryStarPreset() {
 function figureEightPreset() {
   const scale = 120
   const mass  = 1000
+  const vNorm = Math.sqrt(G * mass / scale)
 
   const x1 =  0.97000436 * scale
   const y1 = -0.24308753 * scale
-  const x2 =  0
-  const y2 =  0
-  const x3 = -x1
-  const y3 = -y1
-
-  const vNorm = Math.sqrt(G * mass / scale)
   const vx3 =  0.93240737 * vNorm
   const vy3 =  0.86473146 * vNorm
   const vx1 = -vx3 / 2
@@ -128,7 +121,7 @@ function figureEightPreset() {
       id: generateId(),
       name: 'P2',
       mass,
-      position: new THREE.Vector3(x2, y2, 0),
+      position: new THREE.Vector3(0, 0, 0),
       velocity: new THREE.Vector3(vx3, vy3, 0),
       color: '#ffd54f'
     }),
@@ -136,7 +129,7 @@ function figureEightPreset() {
       id: generateId(),
       name: 'P3',
       mass,
-      position: new THREE.Vector3(x3, y3, 0),
+      position: new THREE.Vector3(-x1, -y1, 0),
       velocity: new THREE.Vector3(vx1, vy1, 0),
       color: '#ff7043'
     })

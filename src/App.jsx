@@ -5,7 +5,7 @@ import BodyInspector from './components/BodyInspector.jsx'
 
 export default function App() {
   const [pendingMass, setPendingMass] = useState(100)
-  const [fps, setFps] = useState(60)
+  const [fps,         setFps]         = useState(60)
   const frameCount = useRef(0)
   const lastTime   = useRef(performance.now())
 

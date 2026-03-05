@@ -3,7 +3,7 @@ import * as THREE from 'three'
 export const G_DEFAULT = 1.0
 export const DT = 0.016
 export const SOFTENING = 8
-export const MAX_TRAIL = 150
+export const MAX_TRAIL = 80
 
 export function computeAccelerations(bodies, G) {
   const accels = bodies.map(() => new THREE.Vector3(0, 0, 0))
@@ -20,7 +20,6 @@ export function computeAccelerations(bodies, G) {
       const r2 = dx * dx + dy * dy + dz * dz
       const r_soft = Math.sqrt(r2 + SOFTENING * SOFTENING)
       const r_soft3 = r_soft * r_soft * r_soft
-
       const forceMag = G / r_soft3
 
       accels[i].x += bj.mass * forceMag * dx
@@ -41,25 +40,26 @@ export function stepSimulation(bodies, G, dt) {
 
   const oldAccels = bodies.map(b => b.acceleration.clone())
 
-  const moved = bodies.map((b, i) => {
-    const newPos = new THREE.Vector3(
+  const moved = bodies.map((b, i) => ({
+    ...b,
+    position: new THREE.Vector3(
       b.position.x + b.velocity.x * dt + 0.5 * oldAccels[i].x * dt * dt,
       b.position.y + b.velocity.y * dt + 0.5 * oldAccels[i].y * dt * dt,
       b.position.z + b.velocity.z * dt + 0.5 * oldAccels[i].z * dt * dt
     )
-    return { ...b, position: newPos }
-  })
+  }))
 
   const newAccels = computeAccelerations(moved, G)
 
-  const integrated = moved.map((b, i) => {
-    const newVel = new THREE.Vector3(
+  const integrated = moved.map((b, i) => ({
+    ...b,
+    velocity: new THREE.Vector3(
       b.velocity.x + 0.5 * (oldAccels[i].x + newAccels[i].x) * dt,
       b.velocity.y + 0.5 * (oldAccels[i].y + newAccels[i].y) * dt,
       b.velocity.z + 0.5 * (oldAccels[i].z + newAccels[i].z) * dt
-    )
-    return { ...b, velocity: newVel, acceleration: newAccels[i].clone() }
-  })
+    ),
+    acceleration: newAccels[i].clone()
+  }))
 
   const { survivors, collisions } = detectCollisions(integrated)
 
@@ -82,23 +82,24 @@ export function detectCollisions(bodies) {
 
       const bi = bodies[i]
       const bj = bodies[j]
-
       const ri = bodyRadius(bi.mass)
       const rj = bodyRadius(bj.mass)
-      const dist = bi.position.distanceTo(bj.position)
 
-      if (dist < (ri + rj) * 0.6) {
+      if (bi.position.distanceTo(bj.position) < (ri + rj) * 0.6) {
         const [survivor, victim] = bi.mass >= bj.mass ? [i, j] : [j, i]
         toRemove.add(victim)
 
         const totalMass = bodies[survivor].mass + bodies[victim].mass
-        const newVel = new THREE.Vector3(
-          (bodies[survivor].velocity.x * bodies[survivor].mass + bodies[victim].velocity.x * bodies[victim].mass) / totalMass,
-          (bodies[survivor].velocity.y * bodies[survivor].mass + bodies[victim].velocity.y * bodies[victim].mass) / totalMass,
-          (bodies[survivor].velocity.z * bodies[survivor].mass + bodies[victim].velocity.z * bodies[victim].mass) / totalMass
-        )
+        bodies[survivor] = {
+          ...bodies[survivor],
+          mass: totalMass,
+          velocity: new THREE.Vector3(
+            (bodies[survivor].velocity.x * bodies[survivor].mass + bodies[victim].velocity.x * bodies[victim].mass) / totalMass,
+            (bodies[survivor].velocity.y * bodies[survivor].mass + bodies[victim].velocity.y * bodies[victim].mass) / totalMass,
+            (bodies[survivor].velocity.z * bodies[survivor].mass + bodies[victim].velocity.z * bodies[victim].mass) / totalMass
+          )
+        }
 
-        bodies[survivor] = { ...bodies[survivor], mass: totalMass, velocity: newVel }
         collisions.push({
           position: bodies[survivor].position.clone(),
           id: `collision-${Date.now()}-${Math.random()}`
@@ -118,10 +119,10 @@ export function bodyRadius(mass) {
 }
 
 export function bodyColor(mass) {
-  if (mass < 1)    return '#4fc3f7'
-  if (mass < 50)   return '#81c784'
-  if (mass < 200)  return '#ffd54f'
-  if (mass < 500)  return '#ff7043'
+  if (mass < 1)   return '#4fc3f7'
+  if (mass < 50)  return '#81c784'
+  if (mass < 200) return '#ffd54f'
+  if (mass < 500) return '#ff7043'
   return '#ffffff'
 }
 

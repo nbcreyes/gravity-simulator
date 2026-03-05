@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { G_DEFAULT, DT } from '../physics/engine.js'
 import { loadPreset } from '../physics/presets.js'
 
-export const useSimulation = create((set, get) => ({
+export const useSimulation = create((set) => ({
   bodies: [],
   paused: false,
   G: G_DEFAULT,
@@ -12,7 +12,9 @@ export const useSimulation = create((set, get) => ({
   placementMode: 'idle',
   collisionFlashes: [],
 
-  addBody: (body) => set(state => ({ bodies: [...state.bodies, body] })),
+  addBody: (body) => set(state => ({
+    bodies: [...state.bodies, body]
+  })),
 
   removeBody: (id) => set(state => ({
     bodies: state.bodies.filter(b => b.id !== id),
@@ -44,7 +46,7 @@ export const useSimulation = create((set, get) => ({
   selectBody: (id) => set({ selectedBodyId: id }),
   setPlacementMode: (mode) => set({ placementMode: mode }),
   setG: (G) => set({ G }),
-  setTimeScale: (timeScale) => set({ timeScale }),
+  setTimeScale: (ts) => set({ timeScale: ts }),
 
   addCollisionFlash: (flash) => set(state => ({
     collisionFlashes: [...state.collisionFlashes, flash]

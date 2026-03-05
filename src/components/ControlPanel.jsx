@@ -1,31 +1,29 @@
 import { useSimulation } from '../store/simulation.js'
 
-const PRESETS = [
-  { name: 'Binary Star', icon: '⭐' },
+const PRESETS      = [
+  { name: 'Binary Star',  icon: '⭐' },
   { name: 'Solar System', icon: '🪐' },
-  { name: 'Figure-8',    icon: '♾️' },
-  { name: 'Chaos',       icon: '💥' },
+  { name: 'Figure-8',     icon: '♾️'  },
+  { name: 'Chaos',        icon: '💥' },
 ]
-
 const TIME_PRESETS = [0.1, 0.5, 1, 5, 20]
 
 export default function ControlPanel({ pendingMass, setPendingMass, fps }) {
-  const paused        = useSimulation(s => s.paused)
-  const bodies        = useSimulation(s => s.bodies)
-  const G             = useSimulation(s => s.G)
-  const timeScale     = useSimulation(s => s.timeScale)
-  const togglePause   = useSimulation(s => s.togglePause)
-  const clearAll      = useSimulation(s => s.clearAll)
-  const loadPreset    = useSimulation(s => s.loadPreset)
-  const setPlacement  = useSimulation(s => s.setPlacementMode)
-  const setG          = useSimulation(s => s.setG)
-  const setTimeScale  = useSimulation(s => s.setTimeScale)
-  const placementMode = useSimulation(s => s.placementMode)
+  const paused       = useSimulation(s => s.paused)
+  const bodies       = useSimulation(s => s.bodies)
+  const G            = useSimulation(s => s.G)
+  const timeScale    = useSimulation(s => s.timeScale)
+  const togglePause  = useSimulation(s => s.togglePause)
+  const clearAll     = useSimulation(s => s.clearAll)
+  const loadPreset   = useSimulation(s => s.loadPreset)
+  const setPlacement = useSimulation(s => s.setPlacementMode)
+  const setG         = useSimulation(s => s.setG)
+  const setTimeScale = useSimulation(s => s.setTimeScale)
+  const placement    = useSimulation(s => s.placementMode)
 
-  const logMass      = (val) => Math.round(Math.exp(Math.log(1000) * val / 100))
-  const massToSlider = (m)   => Math.round(Math.log(m) / Math.log(1000) * 100)
-
-  const timeLabel = timeScale < 1
+  const logMass      = v  => Math.round(Math.exp(Math.log(1000) * v / 100))
+  const massToSlider = m  => Math.round(Math.log(m) / Math.log(1000) * 100)
+  const timeLabel    = timeScale < 1
     ? `${timeScale.toFixed(2)}x`
     : timeScale < 10
     ? `${timeScale.toFixed(1)}x`
@@ -36,7 +34,7 @@ export default function ControlPanel({ pendingMass, setPendingMass, fps }) {
       className="fixed left-4 top-4 z-20 p-4 flex flex-col gap-4"
       style={{
         width: 248,
-        background: 'rgba(6, 6, 18, 0.82)',
+        background: 'rgba(6,6,18,0.82)',
         backdropFilter: 'blur(24px)',
         border: '1px solid rgba(255,255,255,0.07)',
         borderRadius: 14
@@ -47,7 +45,8 @@ export default function ControlPanel({ pendingMass, setPendingMass, fps }) {
         <h1 className="font-orbitron text-base font-bold tracking-[0.2em] text-white">
           GRAVITAS
         </h1>
-        <p className="font-orbitron text-[9px] tracking-widest mt-0.5" style={{ color: '#00e5ff88' }}>
+        <p className="font-orbitron text-[9px] tracking-widest mt-0.5"
+           style={{ color: '#00e5ff88' }}>
           3D GRAVITY SIMULATOR
         </p>
       </div>
@@ -58,12 +57,11 @@ export default function ControlPanel({ pendingMass, setPendingMass, fps }) {
       <div className="flex flex-col gap-2">
         <button
           className="btn-primary"
-          style={{ opacity: placementMode === 'placing' ? 0.6 : 1 }}
-          onClick={() => setPlacement(placementMode === 'placing' ? 'idle' : 'placing')}
+          style={{ opacity: placement === 'placing' ? 0.6 : 1 }}
+          onClick={() => setPlacement(placement === 'placing' ? 'idle' : 'placing')}
         >
-          {placementMode === 'placing' ? '◎  PLACING...' : '+  PLACE BODY'}
+          {placement === 'placing' ? '◎  PLACING...' : '+  PLACE BODY'}
         </button>
-
         <div className="flex flex-col gap-1.5">
           <div className="flex justify-between">
             <label className="font-orbitron text-[9px] text-gray-500 tracking-widest">MASS</label>
@@ -80,7 +78,7 @@ export default function ControlPanel({ pendingMass, setPendingMass, fps }) {
 
       <div className="w-full h-px bg-white/5" />
 
-      {/* Simulation controls */}
+      {/* Controls */}
       <div className="flex gap-2">
         <button className="btn-primary flex-1" onClick={togglePause}>
           {paused ? '▶  RESUME' : '⏸  PAUSE'}

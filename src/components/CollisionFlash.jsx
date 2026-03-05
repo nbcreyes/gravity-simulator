@@ -3,18 +3,17 @@ import { useFrame } from '@react-three/fiber'
 import { useSimulation } from '../store/simulation.js'
 
 function FlashSphere({ flash }) {
-  const meshRef = useRef()
-  const [frame, setFrame] = useState(0)
+  const meshRef    = useRef()
+  const frameRef   = useRef(0)
   const removeFlash = useSimulation(s => s.removeCollisionFlash)
 
   useFrame(() => {
     if (!meshRef.current) return
-    const f = frame + 1
-    setFrame(f)
-    const t = f / 40
+    frameRef.current += 1
+    const t = frameRef.current / 40
     meshRef.current.scale.setScalar(0.5 + t * 3)
     meshRef.current.material.opacity = Math.max(0, 1 - t)
-    if (f >= 40) removeFlash(flash.id)
+    if (frameRef.current >= 40) removeFlash(flash.id)
   })
 
   return (
